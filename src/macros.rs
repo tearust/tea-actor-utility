@@ -40,14 +40,7 @@ macro_rules! actor_messaging_handlers {
 
     __try_collect!();
 
-    actor_handlers!{ 
-      codec::messaging::OP_DELIVER_MESSAGE => handle_nats_message, 
-      codec::core::OP_HEALTH_REQUEST => health 
-    }
 
-    fn health(_req: codec::core::HealthRequest) -> HandlerResult<()> {
-      Ok(())
-    }
 
     fn handle_nats_message(msg: BrokerMessage) -> HandlerResult<()> {
       println(&format!("Received broker message: {:?}", msg));
