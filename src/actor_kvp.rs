@@ -5,7 +5,7 @@ use keyvalue::*;
 
 const CAPABILITY : &'static str = "tea:keyvalue";
 
-pub fn set_forever<'de, T: Serialize + Deserialize<'de>> (binding_name: &'static str, key: &str, value: T) -> HandlerResult<T> {
+pub fn set_forever<'de, T: Serialize + Deserialize<'de>> (binding_name: &'static str, key: &str, value: &T) -> HandlerResult<T> {
   let req = SetRequest{key: key.to_owned(), value:serialize(value)?, expires_s:0};
   let res : SetResponse = deserialize(untyped::host(binding_name).call(
     CAPABILITY,
@@ -36,7 +36,7 @@ pub fn del (binding_name: &'static str, key: &str) -> HandlerResult<String> {
   Ok(res.key)
 }
 
-pub fn get<'de, T: Serialize + Deserialize<'de>> (binding_name: &'static str, key: &str) -> HandlerResult<Option<T>> {
+pub fn get<'de, T: Deserialize<'de>> (binding_name: &'static str, key: &str) -> HandlerResult<Option<T>> {
   let req = GetRequest{key: key.to_owned()};
   let res : GetResponse = deserialize(untyped::host(binding_name).call(
     CAPABILITY,
@@ -74,7 +74,7 @@ pub fn list_range<'de, T: Serialize + Deserialize<'de>> (binding_name: &'static 
   Ok(result)
 }
 
-pub fn list_push<'de, T: Serialize + Deserialize<'de>> (binding_name: &'static str, key: &str, value: T) -> HandlerResult<i32> {
+pub fn list_push<'de, T: Serialize + Deserialize<'de>> (binding_name: &'static str, key: &str, value: &T) -> HandlerResult<i32> {
   let req = ListPushRequest{key: key.to_owned(), value: serialize(value)?};
   let res : ListResponse = deserialize(untyped::host(binding_name).call(
     CAPABILITY,
@@ -84,7 +84,7 @@ pub fn list_push<'de, T: Serialize + Deserialize<'de>> (binding_name: &'static s
   Ok(res.new_count)
 }
 
-pub fn set<'de, T: Serialize + Deserialize<'de>> (binding_name: &'static str, key: &str, value: T, expires_s:i32) -> HandlerResult<T> {
+pub fn set<'de, T: Serialize + Deserialize<'de>> (binding_name: &'static str, key: &str, value: &T, expires_s:i32) -> HandlerResult<T> {
   let req = SetRequest{key: key.to_owned(), value: serialize(value)?, expires_s:expires_s};
   let res : SetResponse = deserialize(untyped::host(binding_name).call(
     CAPABILITY,
@@ -96,7 +96,7 @@ pub fn set<'de, T: Serialize + Deserialize<'de>> (binding_name: &'static str, ke
 }
 
 
-pub fn list_del_item<T: Serialize> (binding_name: &'static str, key: &str, value: T) -> HandlerResult<i32> {
+pub fn list_del_item<T: Serialize> (binding_name: &'static str, key: &str, value: &T) -> HandlerResult<i32> {
   let req = ListDelItemRequest{key: key.to_owned(), value: serialize(value)?};
   let res : ListResponse = deserialize(untyped::host(binding_name).call(
     CAPABILITY,
@@ -106,7 +106,7 @@ pub fn list_del_item<T: Serialize> (binding_name: &'static str, key: &str, value
   Ok(res.new_count)
 }
 
-pub fn set_add<T: Serialize> (binding_name: &'static str, key: &str, value: T) ->HandlerResult<i32>{
+pub fn set_add<T: Serialize> (binding_name: &'static str, key: &str, value: &T) ->HandlerResult<i32>{
   let req = SetAddRequest{key: key.to_owned(), value: serialize(value)?};
   let res: SetOperationResponse = deserialize(untyped::host(binding_name).call(
     CAPABILITY,
@@ -117,7 +117,7 @@ pub fn set_add<T: Serialize> (binding_name: &'static str, key: &str, value: T) -
 }
 
 
-pub fn set_remove<T: Serialize> (binding_name: &'static str, key: &str, value: T) ->HandlerResult<i32>{
+pub fn set_remove<T: Serialize> (binding_name: &'static str, key: &str, value: &T) ->HandlerResult<i32>{
   let req = SetRemoveRequest{key: key.to_owned(), value: serialize(value)?};
   let res: SetOperationResponse = deserialize(untyped::host(binding_name).call(
     CAPABILITY,
