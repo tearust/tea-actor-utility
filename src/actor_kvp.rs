@@ -110,7 +110,7 @@ pub fn set_add<T: Serialize> (binding_name: &'static str, key: &str, value: &T) 
   let req = SetAddRequest{key: key.to_owned(), value: serialize(value)?};
   let res: SetOperationResponse = deserialize(untyped::host(binding_name).call(
     CAPABILITY,
-    OP_LIST_DEL,
+    OP_SET_ADD,
     serialize(req)?
   )?.as_slice())?;
   Ok(res.new_count)
@@ -121,7 +121,7 @@ pub fn set_remove<T: Serialize> (binding_name: &'static str, key: &str, value: &
   let req = SetRemoveRequest{key: key.to_owned(), value: serialize(value)?};
   let res: SetOperationResponse = deserialize(untyped::host(binding_name).call(
     CAPABILITY,
-    OP_LIST_DEL,
+    OP_SET_REMOVE,
     serialize(req)?
   )?.as_slice())?;
   Ok(res.new_count)
@@ -156,6 +156,16 @@ pub fn set_intersect<'de, T: Deserialize<'de>> (binding_name: &'static str, keys
   Ok(result)
 }
 
+pub fn set_query<'de, T: Deserialize<'de>> (binding_name: &'static str, key: &str) -> HandlerResult<Vec<T>>{
+  let req = SetQueryRequest{key: key.to_owned()};
+  let res: SetQueryResponse = deserialize(untyped::host(binding_name).call(
+    CAPABILITY,
+    OP_SET_QUERY,
+    serialize(req)?
+  )?.as_slice())?;
+  let result: Vec<T> = res.values.into_iter().map(|t| deserialize(t.as_slice()).unwrap()).collect();
+  Ok(result) 
+}
 
 pub fn exists(binding_name: &'static str, key: &str) -> HandlerResult<bool> {
   let req = KeyExistsQuery{key: key.to_owned()};
