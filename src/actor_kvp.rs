@@ -177,14 +177,14 @@ pub fn exists(binding_name: &'static str, key: &str) -> HandlerResult<bool> {
   Ok(res.exists)
 }
 
-pub fn keyvec_insert<T: Serialize>(binding_name: &'static str, key: &str, value:(i32, &T)) -> HandlerResult<usize>{
-  let req = KeyVecInsertQuery{key: key.to_string(), value: (value.0, serialize(value.1)?)};
+pub fn keyvec_insert<T: Serialize>(binding_name: &'static str, key: &str, value:(i32, &T), overwrite: bool) -> HandlerResult<bool>{
+  let req = KeyVecInsertQuery{key: key.to_string(), value: (value.0, serialize(value.1)?), overwrite: overwrite};
   let res: KeyVecInsertResponse = deserialize(untyped::host(binding_name).call(
     CAPABILITY,
     OP_KEYVEC_INSERT,
     serialize(req)?
   )?.as_slice())?;
-  Ok(res.len)
+  Ok(res.success)
 }
 
 pub fn keyvec_get<'de, T: Deserialize<'de>> (binding_name: &'static str, key: &str) -> HandlerResult<Vec<(i32, T)>>{
