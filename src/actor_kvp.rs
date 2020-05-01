@@ -176,3 +176,37 @@ pub fn exists(binding_name: &'static str, key: &str) -> HandlerResult<bool> {
   )?.as_slice())?;
   Ok(res.exists)
 }
+
+pub fn keyvec_insert<T: Serialize>(binding_name: &'static str, key: &str, value:(i32, &T)) -> HandlerResult<usize>{
+  let req = KeyVecInsertQuery{key: key.to_string(), value: (value.0, serialize(value.1)?)};
+  let res: KeyVecInsertResponse = deserialize(untyped::host(binding_name).call(
+    CAPABILITY,
+    OP_KEYVEC_INSERT,
+    serialize(req)?
+  )?.as_slice())?;
+  Ok(res.len)
+}
+
+pub fn keyvec_get<'de, T: Deserialize<'de>> (binding_name: &'static str, key: &str) -> HandlerResult<Vec<(i32, T)>>{
+  let req = KeyVecGetQuery{key: key.to_string()};
+  let res: KeyVecGetResponse = deserialize(untyped::host(binding_name).call(
+    CAPABILITY,
+    OP_KEYVEC_GET,
+    serialize(req)?
+  )?.as_slice())?;
+
+  let result: Vec<(i32, T)> = res.values.into_iter().map(|t| (t.0, deserialize(t.1.as_slice()).unwrap())).collect();
+  Ok(result)
+
+}
+
+pub fn keyvec_tail_off(binding_name: &'static str, key: &str, remain: usize) -> HandlerResult<usize>{
+  let req = KeyVecTailOffQuery{key: key.to_string(), remain: remain};
+  let res: KeyVecTailOffResponse = deserialize(untyped::host(binding_name).call(
+    CAPABILITY,
+    OP_KEYVEC_TAILOFF,
+    serialize(req)?
+  )?.as_slice())?;
+  Ok(res.len)
+}
+
