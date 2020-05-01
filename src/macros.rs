@@ -51,18 +51,25 @@ macro_rules! actor_messaging_handlers {
       }
       let splited: (&str, &str, &str, &str, &str, &str, &str, &str, &str, &str) = fillup_to_ten.into_iter().try_collect().unwrap();
       println(&format!("splited: {:?}", &splited));
-
+      let mut result: HandlerResult<()>;
       match splited {
         $(
-          $key => { $handler(&msg); },
+          $key => { result = $handler(&msg); },
         )*
 
         _=>{
           println(&format!("Unhandled broker message: {:?}", msg));
+          result = Ok(());
+
         },
       }
-
-      Ok(())
+      match &result{
+        Ok(r)=> (),
+        Err(e)=>{
+          println(&format!("handling msg {:?} has error {:?}", &msg, e));
+        },
+      };
+      result
     }
   }
 }
