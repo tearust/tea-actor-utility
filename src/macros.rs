@@ -43,7 +43,7 @@ macro_rules! actor_messaging_handlers {
 
 
     fn handle_nats_message(msg: BrokerMessage) -> HandlerResult<()> {
-      println(&format!("Received broker message: {:?}", msg));
+      //println(&format!("Received broker message: {:?}", msg));
       let mut fillup_to_ten: Vec<&str> = msg.subject.split('.').collect() ;
       loop{ 
         if fillup_to_ten.len() >= 10 {break};
