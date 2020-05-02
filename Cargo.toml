@@ -1,16 +1,20 @@
 [package]
 name = "tea-actor-utility"
-version = "0.0.1"
-authors = ["jacky.li <liyangwood@gmail.com>"]
+version = "0.1.0"
+authors = ["jacky.li <liyangwood@gmail.com>", "Kevin Zhang <kevin.zhang.canada@gmail.com>"]
 edition = "2018"
-
+description = "WasCC Tool - Supporting Binary and Sorted Vector Key-Value Pair and Macros to Build Nats Message Actor Handler"
+license = "Apache-2.0"
+readme = "README.md"
+keywords = ["webassembly", "wasm", "codec", "tea", "key_value_pair", "wascc"]
+categories = ["wasm", "data-structures","encoding"]
 [lib]
 crate-type = ["rlib"]
 
 [dependencies]
 
 wascc-actor = "0.7.1"
-tea-codec = { path = "../tea-codec"}
+tea-codec = "0.1.0"
 serde = "1.0.106"
 # serde_json = "1.0.51"
 # serde_derive = "1.0.106"
