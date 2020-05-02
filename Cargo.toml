@@ -6,7 +6,7 @@ edition = "2018"
 description = "WasCC Tool - Supporting Binary and Sorted Vector Key-Value Pair and Macros to Build Nats Message Actor Handler"
 license = "Apache-2.0"
 readme = "README.md"
-keywords = ["webassembly", "wasm", "codec", "tea", "key_value_pair", "wascc"]
+keywords = ["webassembly", "wasm", "tea", "nats", "wascc"]
 categories = ["wasm", "data-structures","encoding"]
 [lib]
 crate-type = ["rlib"]
