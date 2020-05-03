@@ -42,7 +42,7 @@ actor_messaging_handlers!{
 Please note the "`_`" act as the "`*`" in the Nats subscription wildcard as well as the "`..`" act as "`>`" in Nats subject. Think about writing code to handle those `*` and `>` wildcard without the macro.
 
 
-So I made this library to scrach on my own itch. It can probably help you as well.
+So I made this library to scratch on my own itch. It can probably help you as well.
 
 ## Build
 
