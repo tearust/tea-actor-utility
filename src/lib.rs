@@ -64,7 +64,7 @@ pub extern crate wascc_actor;
 mod macros;
 
 pub mod actor_kvp;
-
+pub mod actor_env;
 #[cfg(test)]
 mod test {
   #[macro_use]
