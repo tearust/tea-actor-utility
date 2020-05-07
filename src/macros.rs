@@ -50,7 +50,7 @@ macro_rules! actor_messaging_handlers {
         fillup_to_ten.push("");
       }
       let splited: (&str, &str, &str, &str, &str, &str, &str, &str, &str, &str) = fillup_to_ten.into_iter().try_collect().unwrap();
-      println(&format!("splited: {:?}", &splited));
+      //println(&format!("splited: {:?}", &splited));
       let mut result: HandlerResult<()>;
       match splited {
         $(
