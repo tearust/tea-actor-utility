@@ -1,21 +1,16 @@
-use tea_codec::{serialize, deserialize, keyvalue};
+use tea_codec::{serialize, deserialize, env};
 use wascc_actor::prelude::*;
-use keyvalue::*;
 
-const CAPABILITY : &'static str = "tea:keyvalue";
-const BINDING_ENV : &'static str = "environment";
-pub fn get_env(env_var: &str)->HandlerResult<String>{
-  let req = GetRequest{key: String::from("__tea_env_") + env_var};
-  let res : GetResponse = deserialize(untyped::host(BINDING_ENV).call(
+
+const CAPABILITY : &'static str = "tea:env";
+pub fn get_env_var(env_var: &str)->HandlerResult<(String, bool)>{
+  let req = env::GetRequest{key: env_var.to_string()};
+  let response_vec = untyped::default().call(
     CAPABILITY,
-    OP_GET,
+    env::OP_GET_VAR,
     serialize(req)?
-  )?.as_slice())?;
-  if res.exists{
-    let val: String = deserialize(res.value.as_slice())?;
-    Ok(val)
-  }
-  else{
-    Ok("".to_string())
-  }
+  )?;
+
+  let res : env::GetResponse = deserialize(response_vec.as_slice())?;
+  Ok((res.value, res.exists))
 }

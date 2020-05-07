@@ -12,9 +12,9 @@ categories = ["wasm", "data-structures","encoding"]
 crate-type = ["rlib"]
 
 [dependencies]
-
+log = "0.4.8"
 wascc-actor = "0.7.1"
-tea-codec = "0.1.0"
+tea-codec = { path="../tea-codec"}
 serde = "1.0.106"
 # serde_json = "1.0.51"
 # serde_derive = "1.0.106"

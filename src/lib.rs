@@ -55,13 +55,10 @@
 //! 
 
 pub extern crate wascc_actor;
-
-// pub use wascc_actor::prelude::{
-//   codec, HandlerResult,
-// };
-
 #[macro_use]
 mod macros;
+#[macro_use]
+extern crate log;
 
 pub mod actor_kvp;
 pub mod actor_env;
