@@ -24,6 +24,6 @@ pub fn get_system_time(param: &str) -> HandlerResult<SystemTime>{
     serialize(req)?
   )?;
 
-  let res : env::GetSystemTimeResponse = deserialize(response_vec.as_slice())?;
-  Ok(res.value)
+  let res : SystemTime = deserialize(response_vec.as_slice())?;
+  Ok(res)
 }

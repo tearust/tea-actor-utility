@@ -200,6 +200,17 @@ pub fn keyvec_get<'de, T: Deserialize<'de>> (binding_name: &'static str, key: &s
 
 }
 
+pub fn keyvec_remove_item<T: Serialize>(binding_name: &'static str, key: &str, value:&(i32, T))-> HandlerResult<()>{
+  let req = KeyVecRemoveItemQuery{key: key.to_string(), value: (value.0, serialize(&value.1)?)};
+  let res: KeyVecRemoveItemResponse = deserialize(untyped::host(binding_name).call(
+    CAPABILITY,
+    OP_KEYVEC_REMOVE_ITEM,
+    serialize(req)?
+  )?.as_slice())?;
+
+  Ok(())
+}
+
 pub fn keyvec_tail_off(binding_name: &'static str, key: &str, remain: usize) -> HandlerResult<usize>{
   let req = KeyVecTailOffQuery{key: key.to_string(), remain: remain};
   let res: KeyVecTailOffResponse = deserialize(untyped::host(binding_name).call(
