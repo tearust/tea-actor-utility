@@ -9,7 +9,7 @@ readme = "README.md"
 keywords = ["webassembly", "wasm", "tea", "nats", "wascc"]
 categories = ["wasm", "data-structures","encoding"]
 [lib]
-crate-type = ["rlib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 log = "0.4.8"
@@ -20,4 +20,6 @@ serde = "1.0.106"
 # serde_derive = "1.0.106"
 # rmp-serde = "0.14.3"
 # lazy_static = "1.4.0"
-
+prost = "0.6.1"
+[build-dependencies]
+prost-build = "0.6"
