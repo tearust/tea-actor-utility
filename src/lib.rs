@@ -63,10 +63,12 @@ extern crate log;
 pub mod actor_kvp;
 pub mod actor_env;
 //use std::env;
-mod structs_proto {
-  include!(concat!(env!("OUT_DIR"), "/structs.rs"));
+mod env_proto {
+  include!(concat!(env!("OUT_DIR"), "/env.rs"));
 } 
-
+mod kvp_proto {
+  include!(concat!(env!("OUT_DIR"), "/kvp.rs"));
+} 
 #[cfg(test)]
 mod test {
   #[macro_use]
