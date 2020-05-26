@@ -241,7 +241,7 @@ pub fn keyvec_remove_item(binding_name: &'static str, key: &str, value_idx: i32)
   let req = kvp_proto::KeyVecRemoveItemQuery{key: key.to_string(), value_idx: value_idx};
   let mut buf = Vec::with_capacity(req.encoded_len());
   req.encode(&mut buf).expect("req encoded error"); 
-  let res = kvp_proto::KeyVecRemoveItemResponse::decode(untyped::host(binding_name).call(
+  let _res = kvp_proto::KeyVecRemoveItemResponse::decode(untyped::host(binding_name).call(
     CAPABILITY,
     "KeyVecRemoveItem",
     buf
