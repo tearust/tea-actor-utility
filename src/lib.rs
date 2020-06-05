@@ -56,8 +56,6 @@
 
 pub extern crate wascc_actor;
 #[macro_use]
-mod macros;
-#[macro_use]
 extern crate log;
 
 pub mod actor_kvp;
