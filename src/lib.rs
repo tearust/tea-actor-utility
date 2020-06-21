@@ -55,7 +55,6 @@
 //! 
 
 pub extern crate wascc_actor;
-extern crate log;
 
 pub mod actor_kvp;
 pub mod actor_env;
@@ -66,6 +65,10 @@ mod env_proto {
 mod kvp_proto {
   include!(concat!(env!("OUT_DIR"), "/kvp.rs"));
 } 
+pub mod action;
+#[macro_use]
+extern crate log;
+extern crate lazy_static;
 #[cfg(test)]
 mod test {
   #[macro_use]
