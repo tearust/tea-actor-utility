@@ -47,7 +47,7 @@ pub fn result_handler(msg: &BrokerMessage, uuid: &str) -> HandlerResult<()> {
 pub fn call<F>(
   subject: &str, 
   reply_to: &str, 
-  param: &str, 
+  param: Vec<u8>, 
   callback: F
 ) -> HandlerResult<()> 
 where F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
@@ -65,7 +65,7 @@ where F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
     serialize(BrokerMessage { 
       subject: subject.to_string(), 
       reply_to: reply,
-      body: param.as_bytes().to_vec()
+      body: param
     })?,
   ){
     warn!("actor ra calls nats provider publish error {}", e);
