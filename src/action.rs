@@ -15,7 +15,7 @@ lazy_static! {
     String, 
     Box< dyn FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static >
   >> = {
-    (Mutex::new(HashMap::new()))
+    Mutex::new(HashMap::new())
   };
 }
 
@@ -27,7 +27,7 @@ fn get_uuid() -> String {
 
 pub fn result_handler(msg: &BrokerMessage, uuid: &str) -> HandlerResult<()> {
   //info!("receive nats message: {:?}", msg);
-  let mut callback = {
+  let callback = {
     let mut hash_map = MAP_HANDLER.lock()?;
 
     hash_map.remove(uuid)
