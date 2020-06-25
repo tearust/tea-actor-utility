@@ -31,3 +31,8 @@ pub fn get_system_time(param: &str) -> HandlerResult<SystemTime>{
   let res : SystemTime = deserialize(response_vec.as_slice())?;
   Ok(res)
 }
+
+pub fn get_my_tea_id_hex()-> HandlerResult<String>{
+  info!("In local test mode, use fixed c7e016fad0796bb68594e49a6ef1942cf7e73497e69edb32d19ba2fab3696596 as tea_id");
+  Ok("c7e016fad0796bb68594e49a6ef1942cf7e73497e69edb32d19ba2fab3696596".to_string())
+}

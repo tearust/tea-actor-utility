@@ -26,7 +26,7 @@ fn get_uuid() -> String {
 }
 
 pub fn result_handler(msg: &BrokerMessage, uuid: &str) -> HandlerResult<()> {
-  info!("receive nats message: {:?}", msg);
+  //info!("receive nats message: {:?}", msg);
   let callback = {
     let mut hash_map = MAP_HANDLER.lock()?;
 
