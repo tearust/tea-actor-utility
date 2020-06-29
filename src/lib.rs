@@ -58,6 +58,7 @@ pub extern crate wascc_actor;
 
 pub mod actor_kvp;
 pub mod actor_env;
+pub mod actor_util;
 //use std::env;
 mod env_proto {
   include!(concat!(env!("OUT_DIR"), "/env.rs"));
@@ -65,10 +66,27 @@ mod env_proto {
 mod kvp_proto {
   include!(concat!(env!("OUT_DIR"), "/kvp.rs"));
 } 
+mod tpm_provider_proto{
+  include!(concat!(env!("OUT_DIR"), "/tpm.rs"));
+}
 pub mod action;
 #[macro_use]
 extern crate log;
 extern crate lazy_static;
+
+pub fn encode_protobuf<T>(protobuf_type: T) -> Result<Vec<u8>, Box<dyn std::error::Error>> where T: prost::Message {
+  let mut buf: Vec<u8> = Vec::with_capacity(protobuf_type.encoded_len());
+  protobuf_type.encode(&mut buf)?;
+  Ok(buf)
+}
+
+
+
+
+
+
+
+
 #[cfg(test)]
 mod test {
   #[macro_use]
