@@ -14,7 +14,6 @@ pub fn verify_ed25519_signature(public_key:Vec<u8>, msg:Vec<u8>, signature:Vec<u
     "VerifySignature",
     buf
   )?;
-
   let result = VerifySignatureResponse::decode(res.as_slice())?;
 
   Ok(result.result)
