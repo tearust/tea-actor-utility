@@ -1,9 +1,6 @@
-use std::time::SystemTime;
 use wascc_actor::prelude::*;
 use prost::Message;
 use crate::tpm_provider_proto::*;
-use std::error::Error;
-use hex;
 
 pub fn verify_ed25519_signature(public_key:Vec<u8>, msg:Vec<u8>, signature:Vec<u8>)->HandlerResult<bool>{
   // info!("==============inside util verify sig function \nsignautre hex is {}\npublic_keyhex{}\nmsghex{}",
