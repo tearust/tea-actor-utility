@@ -33,12 +33,12 @@ pub fn get_system_time(param: &str) -> HandlerResult<SystemTime>{
 }
 
 pub fn get_my_tea_id()-> HandlerResult<Vec<u8>>{
-  info!("In local test mode, use fixed df38cb4f12479041c8e8d238109ef2a150b017f382206e24fee932e637c2db7b as tea_id");
-  Ok(hex::decode("df38cb4f12479041c8e8d238109ef2a150b017f382206e24fee932e637c2db7b")?)
+  info!("In local test mode, use fixed e9889b1c54ccd6cf184901ded892069921d76f7749b6f73bed6cf3b9be1a8a44 as tea_id");
+  Ok(hex::decode("e9889b1c54ccd6cf184901ded892069921d76f7749b6f73bed6cf3b9be1a8a44")?)
 }
 
 pub fn get_my_tea_privkey()-> HandlerResult<Vec<u8>>{
-  info!("In local test mode, use placeholder private key fixed 5579a3c220146f0caaab49b884de505098b89326970b929d781cf4a65445a917df38cb4f12479041c8e8d238109ef2a150b017f382206e24fee932e637c2db7b as tea_id");
-  Ok(hex::decode("5579a3c220146f0caaab49b884de505098b89326970b929d781cf4a65445a917df38cb4f12479041c8e8d238109ef2a150b017f382206e24fee932e637c2db7b")?)
+  info!("In local test mode, use fixed 00f86ad55a93d71927a87b36e11b6845e4999160aa81eb5758a5b3872bd72f01 as tea_id");
+  Ok(hex::decode("00f86ad55a93d71927a87b36e11b6845e4999160aa81eb5758a5b3872bd72f01")?)
 
 }
