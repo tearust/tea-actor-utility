@@ -68,7 +68,7 @@ where F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
       body: param
     })?,
   ){
-    warn!("actor ra calls nats provider publish error {}", e);
+    error!("actor ra calls nats provider publish error {}", e);
   }
 
   Ok(())
