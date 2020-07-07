@@ -32,13 +32,13 @@ pub fn get_system_time(param: &str) -> HandlerResult<SystemTime>{
   Ok(res)
 }
 
-pub fn get_my_tea_id()-> HandlerResult<Vec<u8>>{
-  info!("In local test mode, use fixed e9889b1c54ccd6cf184901ded892069921d76f7749b6f73bed6cf3b9be1a8a44 as tea_id");
+pub fn get_my_ephemeral_id()-> HandlerResult<Vec<u8>>{
+  warn!("In local test mode, use fixed e9889b1c54ccd6cf184901ded892069921d76f7749b6f73bed6cf3b9be1a8a44 as tea_id");
   Ok(hex::decode("e9889b1c54ccd6cf184901ded892069921d76f7749b6f73bed6cf3b9be1a8a44")?)
 }
 
-pub fn get_my_tea_privkey()-> HandlerResult<Vec<u8>>{
-  info!("In local test mode, use fixed 00f86ad55a93d71927a87b36e11b6845e4999160aa81eb5758a5b3872bd72f01 as tea_id");
+pub fn get_my_ephemeral_privkey()-> HandlerResult<Vec<u8>>{
+  warn!("In local test mode, use fixed 00f86ad55a93d71927a87b36e11b6845e4999160aa81eb5758a5b3872bd72f01 as tea_id");
   Ok(hex::decode("00f86ad55a93d71927a87b36e11b6845e4999160aa81eb5758a5b3872bd72f01")?)
 
 }
