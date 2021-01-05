@@ -15,13 +15,19 @@ crate-type = ["cdylib", "rlib"]
 log = "0.4.8"
 wascc-actor = "0.7.1"
 tea-codec = { path="../tea-codec"}
-serde = "1.0.106"
+serde = {version = "1.0.106", features = ["derive"]}
+serde_derive = "1.0.106"
 lazy_static = "1.4.0"
-hex = "0.4.2"
 # serde_json = "1.0.51"
 # serde_derive = "1.0.106"
 # rmp-serde = "0.14.3"
 # lazy_static = "1.4.0"
 prost = "0.6.1"
+base64 = "0.12.2"
+url = "2.1.1"
+thiserror = "1.0.22"
+anyhow = "1.0.34"
+ed25519-dalek = "1.0.0-pre.2"
+
 [build-dependencies]
 prost-build = "0.6"
