@@ -62,7 +62,31 @@ where
             body: param,
         })?,
     ) {
-        error!("actor ra calls nats provider publish error {}", e);
+        error!("actor calls nats provider publish error {}", e);
+    }
+
+    Ok(())
+}
+
+pub fn call_intercom<F>(subject: &str, reply_to: &str, param: Vec<u8>, callback: F) -> HandlerResult<()>
+    where
+        F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
+{
+    let uuid = get_uuid();
+
+    let reply = format!("{}.{}", reply_to, uuid);
+    MAP_HANDLER.lock().unwrap().insert(uuid, Box::new(callback));
+
+    if let Err(e) = untyped::default().call(
+        "tea:intercom",
+        messaging::OP_PUBLISH_MESSAGE,
+        serialize(BrokerMessage {
+            subject: subject.to_string(),
+            reply_to: reply,
+            body: param,
+        })?,
+    ) {
+        error!("actor calls intercom provider publish error {}", e);
     }
 
     Ok(())
