@@ -68,22 +68,23 @@ where
     Ok(())
 }
 
-pub fn call_intercom<F>(subject: &str, reply_to: &str, param: Vec<u8>, callback: F) -> HandlerResult<()>
+pub fn call_intercom<F>(destination: &str, msg: BrokerMessage, callback: F) -> HandlerResult<()>
     where
         F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
 {
     let uuid = get_uuid();
 
-    let reply = format!("{}.{}", reply_to, uuid);
+    let mut msg = msg;
+    msg.reply_to = format!("{}.{}", &msg.reply_to, uuid);
     MAP_HANDLER.lock().unwrap().insert(uuid, Box::new(callback));
 
     if let Err(e) = untyped::default().call(
         "tea:intercom",
-        messaging::OP_PUBLISH_MESSAGE,
+        "PostMessage",
         serialize(BrokerMessage {
-            subject: subject.to_string(),
-            reply_to: reply,
-            body: param,
+            subject: destination.to_string(),
+            reply_to: "".into(),
+            body: serialize(msg)?, // the body content is the msg to be delivered
         })?,
     ) {
         error!("actor calls intercom provider publish error {}", e);
