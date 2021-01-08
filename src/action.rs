@@ -94,11 +94,8 @@ where
 //     Ok(())
 // }
 
-pub fn request_intercom<F>(destination: &str, my_actor_name: &str, mut msg: BrokerMessage, callback: F) -> HandlerResult<Vec<u8>>
-    where
-        F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
+pub fn request_intercom(destination: &str, my_actor_name: &str, mut msg: BrokerMessage) -> HandlerResult<Vec<u8>>
 {
-    debug!("tea actor utility request intercom");
     if ! msg.reply_to.is_empty() {
         return Err("When calling request_intercom, always leave reply_to empty, because it is used for response socket".into())
     }
