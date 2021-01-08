@@ -68,16 +68,56 @@ where
     Ok(())
 }
 
-pub fn call_intercom<F>(destination: &str, msg: BrokerMessage, callback: F) -> HandlerResult<()>
+// pub fn call_intercom<F>(destination: &str, msg: BrokerMessage, callback: F) -> HandlerResult<()>
+//     where
+//         F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
+// {
+//     let uuid = get_uuid();
+//     uuid.as_bytes();
+
+//     let mut msg = msg;
+//     msg.reply_to = format!("{}.{}", &msg.reply_to, uuid);
+//     MAP_HANDLER.lock().unwrap().insert(uuid, Box::new(callback));
+
+//     if let Err(e) = untyped::default().call(
+//         "tea:intercom",
+//         "IntercomMessage",
+//         serialize(BrokerMessage {
+//             subject: destination.to_string(),
+//             reply_to: "".into(),
+//             body: serialize(msg)?, // the body content is the msg to be delivered
+//         })?,
+//     ) {
+//         error!("actor calls intercom provider publish error {}", e);
+//     }
+
+//     Ok(())
+// }
+
+pub fn request_intercom<F>(destination: &str, msg: BrokerMessage, callback: F) -> HandlerResult<Vec<u8>>
     where
         F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
 {
-    let uuid = get_uuid();
+    debug!("tea actor utility request intercom");
+    match untyped::default().call(
+        "tea:intercom",
+        "IntercomMessage",
+        serialize(BrokerMessage {
+            subject: destination.to_string(),
+            reply_to: "".into(),
+            body: serialize(msg)?, // the body content is the msg to be delivered
+        })?,
+    ) {
+        Err(e) => Err(format!("actor calls intercom provider publish error {}", e).into()),
+        Ok(r) => Ok(r)
+    }
+}
 
-    let mut msg = msg;
-    msg.reply_to = format!("{}.{}", &msg.reply_to, uuid);
-    MAP_HANDLER.lock().unwrap().insert(uuid, Box::new(callback));
-
+//to avoid endless ping-pong. we have to have a reply_intercom to end
+//when reply an incoming intercom, you cannot call another intercom, you can only 
+//call reply_intercom so that it will end because no callback function as input parameter
+pub fn reply_intercom(destination: &str, msg: BrokerMessage) -> HandlerResult<()>
+{
     if let Err(e) = untyped::default().call(
         "tea:intercom",
         "PostMessage",
@@ -89,7 +129,6 @@ pub fn call_intercom<F>(destination: &str, msg: BrokerMessage, callback: F) -> H
     ) {
         error!("actor calls intercom provider publish error {}", e);
     }
-
     Ok(())
 }
 
