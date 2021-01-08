@@ -68,31 +68,24 @@ where
     Ok(())
 }
 
-// pub fn call_intercom<F>(destination: &str, msg: BrokerMessage, callback: F) -> HandlerResult<()>
-//     where
-//         F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
-// {
-//     let uuid = get_uuid();
-//     uuid.as_bytes();
-
-//     let mut msg = msg;
-//     msg.reply_to = format!("{}.{}", &msg.reply_to, uuid);
-//     MAP_HANDLER.lock().unwrap().insert(uuid, Box::new(callback));
-
-//     if let Err(e) = untyped::default().call(
-//         "tea:intercom",
-//         "IntercomMessage",
-//         serialize(BrokerMessage {
-//             subject: destination.to_string(),
-//             reply_to: "".into(),
-//             body: serialize(msg)?, // the body content is the msg to be delivered
-//         })?,
-//     ) {
-//         error!("actor calls intercom provider publish error {}", e);
-//     }
-
-//     Ok(())
-// }
+pub fn post_intercom(destination: &str, msg: &BrokerMessage) -> HandlerResult<Vec<u8>>
+{
+    if ! msg.reply_to.is_empty() {
+        return Err("When calling post_intercom, always leave reply_to empty".into())
+    }
+    match untyped::default().call(
+        "tea:intercom",
+        "IntercomMessage",
+        serialize(BrokerMessage {
+            subject: destination.to_string(),
+            reply_to: "".into(),
+            body: serialize(msg)?, // the body content is the msg to be delivered
+        })?,
+    ) {
+        Err(e) => Err(format!("actor calls intercom provider publish error {}", e).into()),
+        Ok(r) => Ok(r)
+    }
+}
 
 pub fn request_intercom(destination: &str, my_actor_name: &str, mut msg: BrokerMessage) -> HandlerResult<Vec<u8>>
 {
