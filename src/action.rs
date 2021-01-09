@@ -68,6 +68,41 @@ where
     Ok(())
 }
 
+pub fn call_async_intercom<F>(
+    send_to_actor: &str,
+    reply_actor: &str,
+    msg: BrokerMessage,
+    callback: F,
+) -> HandlerResult<()>
+where
+    F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
+{
+    let uuid = get_uuid();
+    let mut msg = msg;
+    // there are three sections in replay: first for reply name, second is reply trunck,
+    //  and the last is to locate the callback
+    msg.reply_to = format!("{}.{}.{}", reply_actor, &msg.reply_to, &uuid);
+
+    MAP_HANDLER.lock().unwrap().insert(uuid, Box::new(callback));
+
+    if let Err(e) = post_intercom(send_to_actor, &msg) {
+        error!("calls asyc intercom error {}", e);
+    }
+    Ok(())
+}
+
+pub fn intercom_reply_to(actor_name: &str, reply_to: &str, body: Vec<u8>) -> HandlerResult<()> {
+    post_intercom(
+        actor_name,
+        &BrokerMessage {
+            subject: reply_to.to_string(),
+            reply_to: "".to_string(),
+            body,
+        },
+    )?;
+    Ok(())
+}
+
 pub fn post_intercom(actor_name: &str, msg: &BrokerMessage) -> HandlerResult<Vec<u8>> {
     let subject = format!("post.{}", actor_name);
     match untyped::default().call(

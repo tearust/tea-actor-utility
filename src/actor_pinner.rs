@@ -1,19 +1,25 @@
 use crate::action;
 use prost::Message;
 use wascc_actor::HandlerResult;
+use crate::action::call_async_intercom;
+use wascc_actor::prelude::codec::messaging::BrokerMessage;
 
-pub fn is_node_ready<F>(reply_to: &str, mut ready_callback: F) -> anyhow::Result<()>
+const PINNER_ACTOR_NAME: &'static str = "pinner";
+
+pub fn is_node_ready<F>(reply_actor: &str, reply_to: &str, mut ready_callback: F) -> anyhow::Result<()>
 where
     F: FnMut(bool) -> HandlerResult<()> + Sync + Send + 'static,
 {
-    action::call(
-        "actor.pinner.intercom.is_node_ready",
-        reply_to,
-        Vec::new(),
-        move |msg| {
-            let ready: bool = tea_codec::deserialize(msg.body.as_slice())?;
-            ready_callback(ready)
-        },
+    call_async_intercom(PINNER_ACTOR_NAME, reply_actor, BrokerMessage {
+        subject: "actor.pinner.intercom.is_node_ready".into(),
+        reply_to: reply_to.to_string(),
+        body: Vec::new(),
+    },
+      move |msg| {
+          debug!("is_node_ready get callback messaeg: {:?}", msg);
+          let ready: bool = tea_codec::deserialize(msg.body.as_slice())?;
+          ready_callback(ready)
+      },
     )
     .map_err(|e| anyhow::anyhow!("{}", e))
 }
