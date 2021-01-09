@@ -28,76 +28,38 @@ pub fn listen_message<F>(from_peer_id: &str, msg: &BrokerMessage, callback: F) -
 where
     F: Fn(&GeneralMsg, &str, &str) -> HandlerResult<()> + Sync + Send + 'static,
 {
-    let reply = &msg.clone().reply_to;
-    match serialize(BrokerMessage {
-        subject: reply.to_string(),
-        reply_to: String::new(),
-        body: "received".as_bytes().to_vec(),
-    }) {
-        Ok(payload) => {
-            if let Err(err) =
-                untyped::default().call("wascc:messaging", messaging::OP_PUBLISH_MESSAGE, payload)
-            {
+    match GeneralMsg::decode(msg.body.as_slice()) {
+        Ok(ori_msg) => {
+            if let Err(err) = callback(&ori_msg, from_peer_id, &msg.reply_to) {
                 return response_ipfs_p2p_with_error(
                     &msg.reply_to,
                     from_peer_id,
                     "",
-                    &format!("[listen_message] send message error: {:?}", err),
+                    &format!("[listen_message] execute callback error: {:?}", err),
                 );
             }
-
-            match base64::decode(msg.body.clone()) {
-                Ok(ori_msg_bytes) => match GeneralMsg::decode(ori_msg_bytes.as_slice()) {
-                    Ok(ori_msg) => {
-                        if let Err(err) = callback(&ori_msg, from_peer_id, &msg.reply_to) {
-                            return response_ipfs_p2p_with_error(
-                                &msg.reply_to,
-                                from_peer_id,
-                                "",
-                                &format!("[listen_message] execute callback error: {:?}", err),
-                            );
-                        }
-                    }
-                    Err(err) => response_ipfs_p2p_with_error(
-                        &msg.reply_to,
-                        from_peer_id,
-                        "",
-                        &format!("[listen_message] decode GeneralMsg error: {:?}", err),
-                    )?,
-                },
-                Err(err) => response_ipfs_p2p_with_error(
-                    &msg.reply_to,
-                    from_peer_id,
-                    "",
-                    &format!("[listen_message] decode raw message error: {:?}", err),
-                )?,
-            }
+            Ok(())
         }
-        Err(err) => {
-            response_ipfs_p2p_with_error(
-                &msg.reply_to,
-                from_peer_id,
-                "",
-                &format!("[listen_message] serialize BrokerMessage error: {:?}", err),
-            )?;
-        }
+        Err(err) => response_ipfs_p2p_with_error(
+            &msg.reply_to,
+            from_peer_id,
+            "",
+            &format!("[listen_message] decode GeneralMsg error: {:?}", err),
+        ),
     }
-
-    Ok(())
 }
 
 pub fn send_message(peer_id: &str, uuid: &str, msg: GeneralMsg) -> anyhow::Result<()> {
     let nats_key = format!("ipfs.p2p.forward.{}", peer_id);
     let msg_bytes =
         crate::encode_protobuf(msg).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
-    let msg_b64 = base64::encode(msg_bytes);
     if let Err(e) = untyped::default().call(
         "wascc:messaging",
         messaging::OP_PUBLISH_MESSAGE,
         serialize(BrokerMessage {
             subject: nats_key.to_string(),
             reply_to: format!("ipfs.p2p.reply.{}", uuid),
-            body: msg_b64.as_bytes().to_vec(),
+            body: msg_bytes,
         })
         .map_err(|e| TeaError::CommonError(format!("{}", e)))?,
     ) {
@@ -159,6 +121,7 @@ pub fn response_ipfs_p2p_with_error(
     uuid: &str,
     error: &str,
 ) -> anyhow::Result<()> {
+    debug!("response_ipfs_p2p_with_error: {}", error);
     response_ipfs_p2p_reply_with_subject(
         "",
         subject,
