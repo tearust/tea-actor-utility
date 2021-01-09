@@ -68,56 +68,57 @@ where
     Ok(())
 }
 
-pub fn post_intercom(destination: &str, msg: &BrokerMessage) -> HandlerResult<Vec<u8>>
-{
-    if ! msg.reply_to.is_empty() {
-        return Err("When calling post_intercom, always leave reply_to empty".into())
-    }
+pub fn post_intercom(actor_name: &str, msg: &BrokerMessage) -> HandlerResult<Vec<u8>> {
+    let subject = format!("post.{}", actor_name);
     match untyped::default().call(
         "tea:intercom",
         "IntercomMessage",
         serialize(BrokerMessage {
-            subject: destination.to_string(),
+            subject,
             reply_to: "".into(),
             body: serialize(msg)?, // the body content is the msg to be delivered
         })?,
     ) {
         Err(e) => Err(format!("actor calls intercom provider publish error {}", e).into()),
-        Ok(r) => Ok(r)
+        Ok(r) => Ok(r),
     }
 }
 
-pub fn request_intercom(destination: &str, my_actor_name: &str, mut msg: BrokerMessage) -> HandlerResult<Vec<u8>>
-{
-    if ! msg.reply_to.is_empty() {
-        return Err("When calling request_intercom, always leave reply_to empty, because it is used for response socket".into())
+pub fn request_intercom(
+    actor_name: &str,
+    my_actor_name: &str,
+    mut msg: BrokerMessage,
+) -> HandlerResult<Vec<u8>> {
+    if !msg.reply_to.is_empty() {
+        return Err("When calling request_intercom, always leave reply_to empty, because it is used for response socket".into());
     }
+    let subject = format!("request.{}", actor_name);
     let uuid = get_uuid();
     msg.reply_to = format!("reply.{}.{}", my_actor_name, uuid);
     match untyped::default().call(
         "tea:intercom",
         "IntercomMessage",
         serialize(BrokerMessage {
-            subject: destination.to_string(),
+            subject,
             reply_to: msg.reply_to.clone(),
             body: serialize(msg)?, // the body content is the msg to be delivered
         })?,
     ) {
         Err(e) => Err(format!("actor calls intercom provider publish error {}", e).into()),
-        Ok(r) => Ok(r)
+        Ok(r) => Ok(r),
     }
 }
 
 //to avoid endless ping-pong. we have to have a reply_intercom to end
-//when reply an incoming intercom, you cannot call another intercom, you can only 
+//when reply an incoming intercom, you cannot call another intercom, you can only
 //call reply_intercom so that it will end because no callback function as input parameter
-pub fn reply_intercom(destination: &str, msg: &BrokerMessage) -> HandlerResult<()>
-{
+pub fn reply_intercom(actor_name: &str, msg: &BrokerMessage) -> HandlerResult<()> {
+    let subject = format!("reply.{}", actor_name);
     if let Err(e) = untyped::default().call(
         "tea:intercom",
         "IntercomMessage",
         serialize(BrokerMessage {
-            subject: destination.to_string(),
+            subject,
             reply_to: "".into(),
             body: serialize(msg)?, // the body content is the msg to be delivered
         })?,
