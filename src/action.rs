@@ -78,28 +78,14 @@ where
     F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
 {
     let uuid = get_uuid();
-    let mut msg = msg;
-    // there are three sections in replay: first for reply name, second is reply trunck,
-    //  and the last is to locate the callback
-    msg.reply_to = format!("{}.{}.{}", reply_actor, &msg.reply_to, &uuid);
+    MAP_HANDLER
+        .lock()
+        .unwrap()
+        .insert(uuid.clone(), Box::new(callback));
 
-    MAP_HANDLER.lock().unwrap().insert(uuid, Box::new(callback));
-
-    if let Err(e) = post_intercom(send_to_actor, &msg) {
+    if let Err(e) = request_intercom(send_to_actor, reply_actor, uuid, msg) {
         error!("calls asyc intercom error {}", e);
     }
-    Ok(())
-}
-
-pub fn intercom_reply_to(actor_name: &str, reply_to: &str, body: Vec<u8>) -> anyhow::Result<()> {
-    post_intercom(
-        actor_name,
-        &BrokerMessage {
-            subject: reply_to.to_string(),
-            reply_to: "".to_string(),
-            body,
-        },
-    )?;
     Ok(())
 }
 
@@ -107,7 +93,7 @@ pub fn post_intercom(actor_name: &str, msg: &BrokerMessage) -> anyhow::Result<Ve
     let subject = format!("post.{}", actor_name);
     match untyped::default().call(
         "tea:intercom",
-        "IntercomMessage",
+        tea_codec::OP_INTERCOM_MESSAGE,
         serialize_msg(subject, "".into(), msg)?,
     ) {
         Err(e) => Err(anyhow::anyhow!(
@@ -121,17 +107,17 @@ pub fn post_intercom(actor_name: &str, msg: &BrokerMessage) -> anyhow::Result<Ve
 pub fn request_intercom(
     actor_name: &str,
     my_actor_name: &str,
+    uuid: String,
     mut msg: BrokerMessage,
 ) -> anyhow::Result<Vec<u8>> {
     if !msg.reply_to.is_empty() {
         return Err(anyhow::anyhow!("When calling request_intercom, always leave reply_to empty, because it is used for response socket"));
     }
     let subject = format!("request.{}", actor_name);
-    let uuid = get_uuid();
     msg.reply_to = format!("reply.{}.{}", my_actor_name, uuid);
     match untyped::default().call(
         "tea:intercom",
-        "IntercomMessage",
+        tea_codec::OP_INTERCOM_MESSAGE,
         serialize_msg(subject, msg.reply_to.clone(), &msg)?,
     ) {
         Err(e) => Err(anyhow::anyhow!(
@@ -145,11 +131,16 @@ pub fn request_intercom(
 //to avoid endless ping-pong. we have to have a reply_intercom to end
 //when reply an incoming intercom, you cannot call another intercom, you can only
 //call reply_intercom so that it will end because no callback function as input parameter
-pub fn reply_intercom(actor_name: &str, msg: &BrokerMessage) -> anyhow::Result<()> {
+pub fn reply_intercom(actor_name: &str, body: Vec<u8>) -> anyhow::Result<()> {
     if let Err(e) = untyped::default().call(
         "tea:intercom",
-        "IntercomMessage",
-        serialize_msg(actor_name.to_string(), "".into(), msg)?,
+        tea_codec::OP_INTERCOM_MESSAGE,
+        serialize(BrokerMessage {
+            subject: actor_name.to_string(),
+            reply_to: "".into(),
+            body, // the body content is the msg to be delivered
+        })
+        .map_err(|e| anyhow::anyhow!("{}", e))?,
     ) {
         error!("actor calls intercom provider publish error {}", e);
     }
