@@ -73,7 +73,7 @@ pub fn call_async_intercom<F>(
     reply_actor: &str,
     msg: BrokerMessage,
     callback: F,
-) -> HandlerResult<()>
+) -> anyhow::Result<()>
 where
     F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
 {
@@ -91,7 +91,7 @@ where
     Ok(())
 }
 
-pub fn intercom_reply_to(actor_name: &str, reply_to: &str, body: Vec<u8>) -> HandlerResult<()> {
+pub fn intercom_reply_to(actor_name: &str, reply_to: &str, body: Vec<u8>) -> anyhow::Result<()> {
     post_intercom(
         actor_name,
         &BrokerMessage {
@@ -103,18 +103,17 @@ pub fn intercom_reply_to(actor_name: &str, reply_to: &str, body: Vec<u8>) -> Han
     Ok(())
 }
 
-pub fn post_intercom(actor_name: &str, msg: &BrokerMessage) -> HandlerResult<Vec<u8>> {
+pub fn post_intercom(actor_name: &str, msg: &BrokerMessage) -> anyhow::Result<Vec<u8>> {
     let subject = format!("post.{}", actor_name);
     match untyped::default().call(
         "tea:intercom",
         "IntercomMessage",
-        serialize(BrokerMessage {
-            subject,
-            reply_to: "".into(),
-            body: serialize(msg)?, // the body content is the msg to be delivered
-        })?,
+        serialize_msg(subject, "".into(), msg)?,
     ) {
-        Err(e) => Err(format!("actor calls intercom provider publish error {}", e).into()),
+        Err(e) => Err(anyhow::anyhow!(
+            "actor calls intercom provider publish error {}",
+            e
+        )),
         Ok(r) => Ok(r),
     }
 }
@@ -123,9 +122,9 @@ pub fn request_intercom(
     actor_name: &str,
     my_actor_name: &str,
     mut msg: BrokerMessage,
-) -> HandlerResult<Vec<u8>> {
+) -> anyhow::Result<Vec<u8>> {
     if !msg.reply_to.is_empty() {
-        return Err("When calling request_intercom, always leave reply_to empty, because it is used for response socket".into());
+        return Err(anyhow::anyhow!("When calling request_intercom, always leave reply_to empty, because it is used for response socket"));
     }
     let subject = format!("request.{}", actor_name);
     let uuid = get_uuid();
@@ -133,13 +132,12 @@ pub fn request_intercom(
     match untyped::default().call(
         "tea:intercom",
         "IntercomMessage",
-        serialize(BrokerMessage {
-            subject,
-            reply_to: msg.reply_to.clone(),
-            body: serialize(msg)?, // the body content is the msg to be delivered
-        })?,
+        serialize_msg(subject, msg.reply_to.clone(), &msg)?,
     ) {
-        Err(e) => Err(format!("actor calls intercom provider publish error {}", e).into()),
+        Err(e) => Err(anyhow::anyhow!(
+            "actor calls intercom provider publish error {}",
+            e
+        )),
         Ok(r) => Ok(r),
     }
 }
@@ -147,20 +145,34 @@ pub fn request_intercom(
 //to avoid endless ping-pong. we have to have a reply_intercom to end
 //when reply an incoming intercom, you cannot call another intercom, you can only
 //call reply_intercom so that it will end because no callback function as input parameter
-pub fn reply_intercom(actor_name: &str, msg: &BrokerMessage) -> HandlerResult<()> {
-    let subject = format!("reply.{}", actor_name);
+pub fn reply_intercom(actor_name: &str, msg: &BrokerMessage) -> anyhow::Result<()> {
     if let Err(e) = untyped::default().call(
         "tea:intercom",
         "IntercomMessage",
-        serialize(BrokerMessage {
-            subject,
-            reply_to: "".into(),
-            body: serialize(msg)?, // the body content is the msg to be delivered
-        })?,
+        serialize_msg(actor_name.to_string(), "".into(), msg)?,
     ) {
         error!("actor calls intercom provider publish error {}", e);
     }
     Ok(())
+}
+
+fn serialize_msg(
+    subject: String,
+    reply_to: String,
+    msg: &BrokerMessage,
+) -> anyhow::Result<Vec<u8>> {
+    let body = serialize(msg).map_err(|e| anyhow::anyhow!("{}", e))?;
+    if body.len() > 1024 * 128 {
+        // because of the limitation in intercom message, we pre-check message length here to avoid
+        //  error in receiver side
+        return Err(anyhow::anyhow!("serialized broker message over than 128K"));
+    }
+    Ok(serialize(BrokerMessage {
+        subject,
+        reply_to,
+        body, // the body content is the msg to be delivered
+    })
+    .map_err(|e| anyhow::anyhow!("{}", e))?)
 }
 
 pub fn delay_call<F>(
