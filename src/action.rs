@@ -131,12 +131,12 @@ pub fn request_intercom(
 //to avoid endless ping-pong. we have to have a reply_intercom to end
 //when reply an incoming intercom, you cannot call another intercom, you can only
 //call reply_intercom so that it will end because no callback function as input parameter
-pub fn reply_intercom(actor_name: &str, body: Vec<u8>) -> anyhow::Result<()> {
+pub fn reply_intercom(subject: &str, body: Vec<u8>) -> anyhow::Result<()> {
     if let Err(e) = untyped::default().call(
         "tea:intercom",
         tea_codec::OP_INTERCOM_MESSAGE,
         serialize(BrokerMessage {
-            subject: actor_name.to_string(),
+            subject: subject.to_string(),
             reply_to: "".into(),
             body, // the body content is the msg to be delivered
         })
