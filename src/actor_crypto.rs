@@ -155,3 +155,42 @@ pub fn aes_decrypt(key: Vec<u8>, encrypted_data: Vec<u8>) -> anyhow::Result<Vec<
     )?;
     Ok(res.data)
 }
+
+pub fn construct_polkadot_tx(
+    to_public_key: Vec<u8>,
+    private_key: Vec<u8>,
+    amount: Vec<u8>,
+) -> anyhow::Result<Vec<u8>> {
+    let req = crate::crypto_proto::ConstructTxRequest {
+        msg: Some(
+            crate::crypto_proto::construct_tx_request::Msg::PolkadotConstructExtrinsicRequest(
+                crate::crypto_proto::PolkadotConstructExtrinsicRequest {
+                    to_public_key,
+                    amount,
+                    private_key,
+                },
+            ),
+        ),
+    };
+    let res = crate::crypto_proto::ConstructTxResponse::decode(
+        untyped::default()
+            .call(CAPABILITY, "ConstructTx", encode_protobuf(req)?)
+            .map_err(|e| anyhow::anyhow!("{}", e))?
+            .as_slice(),
+    )?;
+    Ok(res.raw_transaction)
+}
+
+pub fn send_tx(key_type: String, raw_transaction: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+    let req = crate::crypto_proto::SendTxRequest {
+        key_type,
+        raw_transaction,
+    };
+    let res = crate::crypto_proto::SendTxResponse::decode(
+        untyped::default()
+            .call(CAPABILITY, "SendTx", encode_protobuf(req)?)
+            .map_err(|e| anyhow::anyhow!("{}", e))?
+            .as_slice(),
+    )?;
+    Ok(res.hash)
+}
