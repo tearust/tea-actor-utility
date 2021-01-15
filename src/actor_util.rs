@@ -94,7 +94,7 @@ where
     Ok(buf)
 }
 
-pub fn ras_keys_to_bytes(key: String) -> anyhow::Result<Vec<u8>> {
+pub fn rsa_key_to_bytes(key: String) -> anyhow::Result<Vec<u8>> {
     let der_encoded =
         key.lines()
             .filter(|line| !line.starts_with("-"))
