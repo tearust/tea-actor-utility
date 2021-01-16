@@ -9,7 +9,7 @@ use base64;
 
 pub fn lookup_node_profile<F>(ephemeral_id: &[u8], reply_to: &str, callback: F) -> HandlerResult<()>
 where
-    F: Fn(&actor_ra_proto::NodeProfile) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(&actor_ra_proto::NodeProfile) -> HandlerResult<()> + Sync + Send + 'static,
 {
     lookup_node_profile_operation(
         ephemeral_id,
@@ -25,7 +25,7 @@ pub fn lookup_node_profile_by_tea_id<F>(
     callback: F,
 ) -> HandlerResult<()>
 where
-    F: Fn(&actor_ra_proto::NodeProfile) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(&actor_ra_proto::NodeProfile) -> HandlerResult<()> + Sync + Send + 'static,
 {
     lookup_node_profile_operation(
         tea_id,
@@ -39,10 +39,10 @@ fn lookup_node_profile_operation<F>(
     param_bytes: &[u8],
     subject: &str,
     reply_to: &str,
-    callback: F,
+    mut callback: F,
 ) -> HandlerResult<()>
 where
-    F: Fn(&actor_ra_proto::NodeProfile) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(&actor_ra_proto::NodeProfile) -> HandlerResult<()> + Sync + Send + 'static,
 {
     action::call(
         subject,
