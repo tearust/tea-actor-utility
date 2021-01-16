@@ -194,3 +194,17 @@ pub fn send_tx(key_type: String, raw_transaction: Vec<u8>) -> anyhow::Result<Vec
     )?;
     Ok(res.hash)
 }
+
+pub fn sha256(content: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+    let req = crate::crypto_proto::ShaRequest {
+        sha_type: "sha256".to_string(),
+        content,
+    };
+    let res = crate::crypto_proto::ShaResponse::decode(
+        untyped::default()
+            .call(CAPABILITY, "Sha", encode_protobuf(req)?)
+            .map_err(|e| anyhow::anyhow!("{}", e))?
+            .as_slice(),
+    )?;
+    Ok(res.hash)
+}
