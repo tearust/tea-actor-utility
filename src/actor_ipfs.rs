@@ -114,6 +114,17 @@ pub fn ipfs_id() -> anyhow::Result<String> {
     String::from_utf8(res).map_err(|e| e.into())
 }
 
+pub fn ipfs_swarm_peers() -> anyhow::Result<Vec<String>> {
+    let res = untyped::default()
+        .call(
+            "tea:ipfs",
+            tea_codec::ipfs_codec::OP_SWARM_PEERS,
+            Vec::new(),
+        )
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    Ok(codec::deserialize(&res).map_err(|e| anyhow::anyhow!("{}", e))?)
+}
+
 pub fn announce_as_provider(req: &DhtProvideRequest) -> anyhow::Result<String> {
     let deployment_id_bytes = untyped::default()
         .call(
