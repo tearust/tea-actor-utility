@@ -22,12 +22,12 @@ impl ShabbyLock {
             match t {
                 Ok(res) => match res {
                     Some(_) => {
-                        info!("ShabbyLock is waiting for lock...in loop...");
+                        debug!("ShabbyLock is waiting for lock...in loop...");
                         continue;
                     }
                     None => {
                         let _ = set(binding_name, &key, b"lock", 6000);
-                        info!("Received lock");
+                        debug!("Received lock");
                         break;
                     }
                 },
@@ -40,7 +40,7 @@ impl ShabbyLock {
 
 impl Drop for ShabbyLock {
     fn drop(&mut self) {
-        info!("drop ShabbyLock");
+        debug!("drop ShabbyLock");
         let _ = del(&self.binding_name, &self.key);
     }
 }
