@@ -16,18 +16,18 @@ pub struct ShabbyLock {
 impl ShabbyLock {
     pub fn lock(binding_name: &'static str, uid: &str) -> Self {
         let key = format!("ShabbyLock_{}", uid);
-        info!("enter lock {}", &key);
+        trace!("enter lock {}", &key);
         loop {
             let t: anyhow::Result<Option<String>> = get(binding_name, &key);
             match t {
                 Ok(res) => match res {
                     Some(_) => {
-                        debug!("ShabbyLock is waiting for lock...in loop...");
+                        trace!("ShabbyLock is waiting for lock...in loop...");
                         continue;
                     }
                     None => {
                         let _ = set(binding_name, &key, b"lock", 6000);
-                        debug!("Received lock");
+                        trace!("Received lock");
                         break;
                     }
                 },
@@ -40,7 +40,7 @@ impl ShabbyLock {
 
 impl Drop for ShabbyLock {
     fn drop(&mut self) {
-        debug!("drop ShabbyLock");
+        trace!("drop ShabbyLock");
         let _ = del(&self.binding_name, &self.key);
     }
 }
