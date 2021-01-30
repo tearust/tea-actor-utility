@@ -29,7 +29,7 @@ where
 {
     lookup_node_profile_operation(
         tea_id,
-        "layer1.async.reply.manifest_cid_by_tea_id",
+        "layer1.async.reply.node_profile_by_tea_id",
         reply_to,
         callback,
     )
