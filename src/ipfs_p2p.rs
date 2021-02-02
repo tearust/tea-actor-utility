@@ -40,12 +40,15 @@ where
             }
             Ok(())
         }
-        Err(err) => response_ipfs_p2p_with_error(
-            &msg.reply_to,
-            from_peer_id,
-            "",
-            &format!("[listen_message] decode GeneralMsg error: {:?}", err),
-        ),
+        Err(err) => {
+            error!("GeneralMsg::decode error. body is {:?}, error is {:?}", &msg.body, &err);
+            response_ipfs_p2p_with_error(
+                &msg.reply_to,
+                from_peer_id,
+                "",
+                &format!("[listen_message] decode GeneralMsg error: {:?}", err)
+            )
+        },
     }
 }
 
