@@ -121,6 +121,7 @@ pub fn response_ipfs_p2p_with_error(
     uuid: &str,
     error: &str,
 ) -> anyhow::Result<()> {
+    info!("ipfs_p2p.rs subject:{}, peer_id:{}, uuid:{}, error:{}", subject, peer_id, uuid , error);
     error!("response_ipfs_p2p_with_error: {}", error);
     response_ipfs_p2p_reply_with_subject(
         "",
