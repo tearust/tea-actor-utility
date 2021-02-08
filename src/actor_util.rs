@@ -139,7 +139,10 @@ pub fn rsa_decrypt(rsa_priv_key: Vec<u8>, encrypted_msg: Vec<u8>) -> anyhow::Res
     //     "\n\n\n\n**The new original key is hex:{}\n\n\n\n",
     //     hex::encode(&dec_key.result)
     // );
-    Ok(dec_key.result)
+    match dec_key.error {
+        Some(e) => Err(anyhow::anyhow!("{}", e)),
+        None => Ok(dec_key.result),
+    }
 }
 
 pub fn url_decode(url: &str) -> HandlerResult<String> {
