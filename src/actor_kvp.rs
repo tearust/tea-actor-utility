@@ -113,8 +113,13 @@ pub fn get<'de, T: Deserialize<'de>>(
     )?;
 
     if res.exists {
-        let result: T = deserialize(&res.value.unwrap())?;
-        Ok(Some(result))
+        match res.value {
+            Some(kvp_proto::get_response::Value::V(value)) => {
+                let result: T = deserialize(&value)?;
+                Ok(Some(result))
+            }
+            _ => Ok(None),
+        }
     } else {
         Ok(None)
     }
@@ -353,7 +358,7 @@ pub fn keyvec_insert<T: Serialize>(
     };
     let req = kvp_proto::KeyVecInsertQuery {
         key: key.to_string(),
-        value: t,
+        value: Some(t),
         overwrite: overwrite,
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
