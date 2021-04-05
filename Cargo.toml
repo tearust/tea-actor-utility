@@ -13,8 +13,6 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 log = "0.4.8"
-wascc-actor = "0.7.1"
-tea-codec = { path="../tea-codec"}
 serde = {version = "1.0.106", features = ["derive"]}
 serde_derive = "1.0.106"
 lazy_static = "1.4.0"
@@ -29,6 +27,8 @@ thiserror = "1.0.22"
 anyhow = "1.0.34"
 ed25519-dalek = "1.0.0-pre.2"
 byteorder = "1.3"
+wascc-actor = { path = "../wascc-actor" }
+tea-codec = { path="../tea-codec"}
 vmh-codec = { path = "../mini-runtime/vmh-codec" }
 
 [build-dependencies]
