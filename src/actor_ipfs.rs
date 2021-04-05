@@ -99,7 +99,7 @@ pub fn generate_deployment_id(key_bytes: Vec<u8>) -> anyhow::Result<String> {
     Ok(deployment_id)
 }
 
-fn call_ipfs_provider(operation: String, msg: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+pub fn call_ipfs_provider(operation: String, msg: Vec<u8>) -> anyhow::Result<Vec<u8>> {
     untyped::default()
         .call(
             vmh_codec::VMH_CAPABILITY_ID,
