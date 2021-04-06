@@ -24,12 +24,7 @@ anyhow = "1.0.34"
 ed25519-dalek = "1.0.0-pre.2"
 byteorder = "1.3"
 wascc-actor = { git = "https://github.com/tearust/wascc-actor", branch = "nitro" }
-tea-codec = { git = "https://github.com/tearust/tea-codec" }
 vmh-codec = { path = "../mini-runtime/vmh-codec" }
-
-[patch.'https://github.com/tearust/wascc-actor']
-wascc-actor = { path = "../wascc-actor" }
-[patch.'https://github.com/tearust/tea-codec']
 tea-codec = { path="../tea-codec"}
 
 [build-dependencies]
