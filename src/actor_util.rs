@@ -1,8 +1,8 @@
-use crate::encode_protobuf;
 use crate::tpm_provider_proto::*;
 use ed25519_dalek::Keypair;
 use prost::Message;
 use tea_codec::error::TeaError;
+use vmh_codec::message::encode_protobuf;
 use wascc_actor::prelude::*;
 
 pub fn generate_ed25519_keypair() -> anyhow::Result<Vec<u8>> {
@@ -29,8 +29,7 @@ pub fn verify_ed25519_signature(
         msg,
     };
 
-    let buf: Vec<u8> =
-        crate::encode_protobuf(req).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
+    let buf: Vec<u8> = encode_protobuf(req).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
     let res = untyped::default()
         .call("tea:tpm", "Ed25519VerifySignature", buf)
         .map_err(|e| TeaError::CommonError(format!("{}", e)))?;
@@ -43,8 +42,7 @@ pub fn sign_ed25519_message(message: &Vec<u8>, key: Option<Vec<u8>>) -> anyhow::
     // info!("enter sign_ed... in actor_util msg is {:?}", message);
     let msg = message.to_vec();
     let req = Ed25519SignRequest { msg, key };
-    let buf: Vec<u8> =
-        crate::encode_protobuf(req).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
+    let buf: Vec<u8> = encode_protobuf(req).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
     let res = untyped::default()
         .call("tea:tpm", "Ed25519SignMessage", buf)
         .map_err(|e| TeaError::CommonError(format!("{}", e)))?;
@@ -62,8 +60,7 @@ pub fn verify_sr25519_signature(
         msg,
     };
 
-    let buf: Vec<u8> =
-        crate::encode_protobuf(req).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
+    let buf: Vec<u8> = encode_protobuf(req).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
     let res = untyped::default()
         .call("tea:tpm", "Sr25519VerifySignature", buf)
         .map_err(|e| TeaError::CommonError(format!("{}", e)))?;
@@ -77,8 +74,7 @@ pub fn sign_sr25519_message(message: &[u8], key: &[u8]) -> anyhow::Result<Vec<u8
         msg: message.to_vec(),
         key: key.to_vec(),
     };
-    let buf: Vec<u8> =
-        crate::encode_protobuf(req).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
+    let buf: Vec<u8> = encode_protobuf(req).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
     let res = untyped::default()
         .call("tea:tpm", "Sr25519SignMessage", buf)
         .map_err(|e| TeaError::CommonError(format!("{}", e)))?;

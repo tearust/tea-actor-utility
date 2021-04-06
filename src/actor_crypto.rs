@@ -1,5 +1,5 @@
-use crate::encode_protobuf;
 use prost::Message;
+use vmh_codec::message::encode_protobuf;
 use wascc_actor::untyped;
 
 const CAPABILITY: &'static str = "tea:crypto";

@@ -1,11 +1,12 @@
 use crate::actor_nats::response_reply_with_subject;
+use crate::actor_ra_proto;
 use crate::p2p_proto::GeneralMsg;
-use crate::{actor_ra_proto, encode_protobuf};
 use codec::messaging;
 use codec::messaging::BrokerMessage;
 use prost::Message;
 use serde::{Deserialize, Serialize};
 use tea_codec::error::TeaError;
+use vmh_codec::message::encode_protobuf;
 use wascc_actor::prelude::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -41,21 +42,23 @@ where
             Ok(())
         }
         Err(err) => {
-            error!("GeneralMsg::decode error. body is {:?}, error is {:?}", &msg.body, &err);
+            error!(
+                "GeneralMsg::decode error. body is {:?}, error is {:?}",
+                &msg.body, &err
+            );
             response_ipfs_p2p_with_error(
                 &msg.reply_to,
                 from_peer_id,
                 "",
-                &format!("[listen_message] decode GeneralMsg error: {:?}", err)
+                &format!("[listen_message] decode GeneralMsg error: {:?}", err),
             )
-        },
+        }
     }
 }
 
 pub fn send_message(peer_id: &str, uuid: &str, msg: GeneralMsg) -> anyhow::Result<()> {
     let nats_key = format!("ipfs.p2p.forward.{}", peer_id);
-    let msg_bytes =
-        crate::encode_protobuf(msg).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
+    let msg_bytes = encode_protobuf(msg).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
     if let Err(e) = untyped::default().call(
         "wascc:messaging",
         messaging::OP_PUBLISH_MESSAGE,
@@ -124,7 +127,10 @@ pub fn response_ipfs_p2p_with_error(
     uuid: &str,
     error: &str,
 ) -> anyhow::Result<()> {
-    info!("ipfs_p2p.rs subject:{}, peer_id:{}, uuid:{}, error:{}", subject, peer_id, uuid , error);
+    info!(
+        "ipfs_p2p.rs subject:{}, peer_id:{}, uuid:{}, error:{}",
+        subject, peer_id, uuid, error
+    );
     error!("response_ipfs_p2p_with_error: {}", error);
     response_ipfs_p2p_reply_with_subject(
         "",
