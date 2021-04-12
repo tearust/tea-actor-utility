@@ -153,11 +153,6 @@ fn serialize_msg(
     msg: &BrokerMessage,
 ) -> anyhow::Result<Vec<u8>> {
     let body = serialize(msg).map_err(|e| anyhow::anyhow!("{}", e))?;
-    if body.len() > 1024 * 128 {
-        // because of the limitation in intercom message, we pre-check message length here to avoid
-        //  error in receiver side
-        return Err(anyhow::anyhow!("serialized broker message over than 128K"));
-    }
     Ok(serialize(BrokerMessage {
         subject,
         reply_to,
