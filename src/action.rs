@@ -19,7 +19,7 @@ lazy_static! {
 
 pub fn get_uuid() -> String {
     let extras = extras::default();
-    extras.get_guid().unwrap()
+    extras.get_sequence_number().unwrap().to_string()
 }
 
 pub fn result_handler(msg: &BrokerMessage, uuid: &str) -> HandlerResult<()> {
