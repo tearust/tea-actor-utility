@@ -87,6 +87,7 @@ pub mod actor_ipfs;
 pub mod actor_kvp;
 pub mod actor_nats;
 pub mod actor_pinner;
+pub mod actor_rpc;
 pub mod actor_util;
 pub mod async_collector;
 pub mod common;
