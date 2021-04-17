@@ -106,7 +106,7 @@ pub fn call_ipfs_provider(operation: String, msg: Vec<u8>) -> anyhow::Result<Vec
             vmh_codec::OP_OUTBOUND_MESSAGE,
             encode_protobuf(vmh::OutboundRequest {
                 ref_seq: get_outbound_sequence()?,
-                provider: IPFS_OUTER_PROVIDER_NAME.into(),
+                channel: IPFS_OUTER_PROVIDER_NAME.into(),
                 msg: Some(vmh::outbound_request::Msg::ProviderOperationRequest(
                     vmh::ProviderOperationRequest {
                         actor: "".into(),
