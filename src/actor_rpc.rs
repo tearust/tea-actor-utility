@@ -5,34 +5,45 @@ use vmh_codec::message::{
     structs_proto::{rpc, vmh},
 };
 use vmh_codec::{ADAPTER_RPC_CHANNEL_NAME, LAYER1_RPC_CHANNEL_NAME};
+use wascc_actor::prelude::codec::messaging::BrokerMessage;
 use wascc_actor::prelude::*;
 
-pub fn ipfs_block_get(
-    cid: String,
-    wait_locally: bool,
-    return_if_not_exist: bool,
-) -> anyhow::Result<Vec<u8>> {
-    let rpc_res_bytes = call_adapter_rpc(rpc::AdapterGeneralRequest {
-        msg: Some(rpc::adapter_general_request::Msg::IpfsBlockGetRequest(
-            rpc::IpfsBlockGetRequest {
-                cid: cid.clone(),
-                wait_locally,
-                return_if_not_exist,
+pub fn ipfs_info(peer_id: Option<String>) -> anyhow::Result<rpc::IpfsInfoResponse> {
+    let rpc_res_bytes = call_adapter_rpc(rpc::AdapterClientRequest {
+        msg: Some(rpc::adapter_client_request::Msg::IpfsInfoRequest(
+            rpc::IpfsInfoRequest {
+                peer_id: peer_id.unwrap_or("".into()),
             },
         )),
     })?;
-    let res = rpc::AdapterGeneralResponse::decode(rpc_res_bytes.as_slice())?;
-    if let Some(rpc::adapter_general_response::Msg::IpfsBlockGetResponse(res)) = res.msg {
-        if !cid.eq(&res.cid) {
-            return Err(anyhow::anyhow!(
-                "block get result got different cid: expect is {}, actual is {}",
-                &cid,
-                &res.cid
-            ));
-        }
-        return Ok(res.payload);
-    }
-    Err(anyhow::anyhow!("unknown response: {:?}", res))
+    Ok(rpc::IpfsInfoResponse::decode(rpc_res_bytes.as_slice())?)
+}
+
+pub fn ipfs_block_get<F>(
+    cid: String,
+    reply_to: String,
+    wait_locally: bool,
+    return_if_not_exist: bool,
+    callback: F,
+) -> anyhow::Result<()>
+where
+    F: FnMut(&BrokerMessage) -> anyhow::Result<()> + Sync + Send + 'static,
+{
+    call_adapter_rpc_async(
+        move |uuid| {
+            Ok(rpc::AdapterClientRequest {
+                msg: Some(rpc::adapter_client_request::Msg::IpfsBlockGetRequest(
+                    rpc::IpfsBlockGetRequest {
+                        cid: cid.clone(),
+                        wait_locally,
+                        return_if_not_exist,
+                        reply: format!("{}.{}", reply_to, uuid),
+                    },
+                )),
+            })
+        },
+        callback,
+    )
 }
 
 pub fn layer1_add_new_node(tea_id: Vec<u8>) -> anyhow::Result<()> {
@@ -57,7 +68,7 @@ pub fn layer1_add_new_node(tea_id: Vec<u8>) -> anyhow::Result<()> {
     Err(anyhow::anyhow!("unknown response: {:?}", res))
 }
 
-pub fn call_adapter_rpc(req: rpc::AdapterGeneralRequest) -> anyhow::Result<Vec<u8>> {
+pub fn call_adapter_rpc(req: rpc::AdapterClientRequest) -> anyhow::Result<Vec<u8>> {
     untyped::default()
         .call(
             vmh_codec::VMH_CAPABILITY_ID,
@@ -65,10 +76,31 @@ pub fn call_adapter_rpc(req: rpc::AdapterGeneralRequest) -> anyhow::Result<Vec<u
             encode_protobuf(vmh::OutboundRequest {
                 ref_seq: get_outbound_sequence()?,
                 channel: ADAPTER_RPC_CHANNEL_NAME.into(),
-                msg: Some(vmh::outbound_request::Msg::AdapterGeneralRequest(req)),
+                msg: Some(vmh::outbound_request::Msg::AdapterClientRequest(req)),
             })?,
         )
         .map_err(|e| anyhow::anyhow!("{}", e))
+}
+
+pub fn call_adapter_rpc_async<F, R>(mut request_fun: R, callback: F) -> anyhow::Result<()>
+where
+    F: FnMut(&BrokerMessage) -> anyhow::Result<()> + Sync + Send + 'static,
+    R: FnMut(&str) -> anyhow::Result<rpc::AdapterClientRequest> + Sync + Send + 'static,
+{
+    super::action::call_async(
+        vmh_codec::VMH_CAPABILITY_ID,
+        vmh_codec::OP_OUTBOUND_MESSAGE,
+        move |uuid| {
+            encode_protobuf(vmh::OutboundRequest {
+                ref_seq: get_outbound_sequence()?,
+                channel: ADAPTER_RPC_CHANNEL_NAME.into(),
+                msg: Some(vmh::outbound_request::Msg::AdapterClientRequest(
+                    request_fun(uuid)?,
+                )),
+            })
+        },
+        callback,
+    )
 }
 
 pub fn call_layer1_rpc(req: rpc::Layer1GeneralRequest) -> anyhow::Result<Vec<u8>> {

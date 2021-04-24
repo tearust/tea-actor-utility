@@ -1,13 +1,13 @@
 use crate::actor_nats::response_reply_with_subject;
-use crate::actor_ra_proto;
 use crate::p2p_proto::GeneralMsg;
-use codec::messaging;
 use codec::messaging::BrokerMessage;
 use prost::Message;
 use serde::{Deserialize, Serialize};
 use tea_codec::error::TeaError;
-use vmh_codec::message::encode_protobuf;
+use vmh_codec::message::{encode_protobuf, structs_proto::rpc};
 use wascc_actor::prelude::*;
+
+const PREFIX_P2P_REPLY: &str = "ipfs.p2p.reply";
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum P2pReplyType {
@@ -57,20 +57,18 @@ where
 }
 
 pub fn send_message(peer_id: &str, uuid: &str, msg: GeneralMsg) -> anyhow::Result<()> {
-    let nats_key = format!("ipfs.p2p.forward.{}", peer_id);
-    let msg_bytes = encode_protobuf(msg).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
-    if let Err(e) = untyped::default().call(
-        "wascc:messaging",
-        messaging::OP_PUBLISH_MESSAGE,
-        serialize(BrokerMessage {
-            subject: nats_key.to_string(),
-            reply_to: format!("ipfs.p2p.reply.{}", uuid),
-            body: msg_bytes,
-        })
-        .map_err(|e| TeaError::CommonError(format!("{}", e)))?,
-    ) {
-        error!("p2p send message with error {}", e);
-    }
+    let peer_id = peer_id.to_string();
+    let reply = format!("{}.{}", PREFIX_P2P_REPLY, uuid);
+    let payload = encode_protobuf(msg).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
+    let _ = super::actor_rpc::call_adapter_rpc(rpc::AdapterClientRequest {
+        msg: Some(rpc::adapter_client_request::Msg::IpfsP2pFrowardRequest(
+            rpc::IpfsP2pFrowardRequest {
+                peer_id,
+                reply,
+                payload,
+            },
+        )),
+    })?;
 
     Ok(())
 }
@@ -82,41 +80,32 @@ pub fn async_pull_cid_data(
     pin: bool,
     reply_to: &str,
 ) -> anyhow::Result<()> {
-    let nats_key = format!("ipfs.p2p.pull_cid_data.{}", peer_id);
-    info!("async_pull_cid_data reply_to: {}", &reply_to);
-    let req = actor_ra_proto::AsyncPullCidDataRequest {
-        cid: cid.to_string(),
-        payload: payload.to_vec(),
-        pin,
-    };
-    if let Err(e) = untyped::default().call(
-        "wascc:messaging",
-        messaging::OP_PUBLISH_MESSAGE,
-        serialize(BrokerMessage {
-            subject: nats_key.to_string(),
-            reply_to: reply_to.to_string(),
-            body: encode_protobuf(req).map_err(|e| TeaError::CommonError(format!("{}", e)))?,
-        })
-        .map_err(|e| TeaError::CommonError(format!("{}", e)))?,
-    ) {
-        error!("pull cid data with error {}", e);
-    }
+    let peer_id = peer_id.to_string();
+    let payload = payload.to_vec();
+    let reply = reply_to.to_string();
+    let cid = cid.to_string();
+    let _ = super::actor_rpc::call_adapter_rpc(rpc::AdapterClientRequest {
+        msg: Some(rpc::adapter_client_request::Msg::IpfsPullCidDataRequest(
+            rpc::IpfsPullCidDataRequest {
+                peer_id,
+                reply,
+                payload,
+                pin,
+                cid,
+            },
+        )),
+    })?;
 
     Ok(())
 }
 
 pub fn close_p2p(peer_id: &str) -> HandlerResult<()> {
-    let close_sub = format!("ipfs.p2p.close.{}", peer_id);
-    info!("channel closed with => {}", close_sub);
-    untyped::default().call(
-        "wascc:messaging",
-        messaging::OP_PUBLISH_MESSAGE,
-        serialize(BrokerMessage {
-            subject: close_sub.to_string(),
-            reply_to: String::new(),
-            body: "".as_bytes().to_vec(),
-        })?,
-    )?;
+    let peer_id = peer_id.to_string();
+    let _ = super::actor_rpc::call_adapter_rpc(rpc::AdapterClientRequest {
+        msg: Some(rpc::adapter_client_request::Msg::IpfsP2pCloseRequest(
+            rpc::IpfsP2pCloseRequest { peer_id },
+        )),
+    })?;
 
     Ok(())
 }

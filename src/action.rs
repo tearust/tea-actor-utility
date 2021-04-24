@@ -12,7 +12,7 @@ lazy_static! {
     pub static ref MAP_HANDLER: Mutex<
         HashMap<
             String,
-            Box<dyn FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static>,
+            Box<dyn FnMut(&BrokerMessage) -> anyhow::Result<()> + Sync + Send + 'static>,
         >,
     > = Mutex::new(HashMap::new());
 }
@@ -22,7 +22,7 @@ pub fn get_uuid() -> String {
     extras.get_sequence_number().unwrap().to_string()
 }
 
-pub fn result_handler(msg: &BrokerMessage, uuid: &str) -> HandlerResult<()> {
+pub fn result_handler(msg: &BrokerMessage, uuid: &str) -> anyhow::Result<()> {
     trace!("action result_handler received message: {:?}", msg);
     let callback = {
         match MAP_HANDLER.lock() {
@@ -42,30 +42,49 @@ pub fn result_handler(msg: &BrokerMessage, uuid: &str) -> HandlerResult<()> {
     }
 }
 
-pub fn call<F>(subject: &str, reply_to: &str, param: Vec<u8>, callback: F) -> HandlerResult<()>
+pub fn call_async<F, P>(
+    capid: &str,
+    operation: &str,
+    mut gen_payload: P,
+    callback: F,
+) -> anyhow::Result<()>
 where
-    F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(&BrokerMessage) -> anyhow::Result<()> + Sync + Send + 'static,
+    P: FnMut(&str) -> anyhow::Result<Vec<u8>> + Sync + Send + 'static,
 {
     let uuid = get_uuid();
-    //info!("uuid -> {}", &uuid);
-
-    let reply = format!("{}.{}", reply_to, uuid);
-    // TODO error here when tpm & layer1 both call, how to fix?
-    MAP_HANDLER.lock().unwrap().insert(uuid, Box::new(callback));
-
-    if let Err(e) = untyped::default().call(
-        "wascc:messaging",
-        messaging::OP_PUBLISH_MESSAGE,
-        serialize(BrokerMessage {
-            subject: subject.to_string(),
-            reply_to: reply,
-            body: param,
-        })?,
-    ) {
-        error!("actor calls nats provider publish error {}", e);
+    MAP_HANDLER
+        .lock()
+        .unwrap()
+        .insert(uuid.clone(), Box::new(callback));
+    if let Err(e) = untyped::default().call(capid, operation, gen_payload(&uuid)?) {
+        error!("actor calls {} {} error: {}", capid, operation, e);
     }
 
     Ok(())
+}
+
+pub fn call<F>(subject: &str, reply_to: &str, param: Vec<u8>, callback: F) -> anyhow::Result<()>
+where
+    F: FnMut(&BrokerMessage) -> anyhow::Result<()> + Sync + Send + 'static,
+{
+    let subject = subject.to_string();
+    let reply_to = reply_to.to_string();
+    call_async(
+        "wascc:messaging",
+        messaging::OP_PUBLISH_MESSAGE,
+        move |uuid| {
+            let reply = format!("{}.{}", reply_to, uuid);
+            let payload = serialize(BrokerMessage {
+                subject: subject.clone(),
+                reply_to: reply,
+                body: param.clone(),
+            })
+            .map_err(|e| anyhow::anyhow!("{}", e))?;
+            Ok(payload)
+        },
+        callback,
+    )
 }
 
 pub fn call_async_intercom<F>(
@@ -75,7 +94,7 @@ pub fn call_async_intercom<F>(
     callback: F,
 ) -> anyhow::Result<()>
 where
-    F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(&BrokerMessage) -> anyhow::Result<()> + Sync + Send + 'static,
 {
     let uuid = get_uuid();
     MAP_HANDLER
@@ -166,9 +185,9 @@ pub fn delay_call<F>(
     param: Vec<u8>,
     delay_seconds: u64,
     callback: F,
-) -> HandlerResult<()>
+) -> anyhow::Result<()>
 where
-    F: FnMut(&BrokerMessage) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(&BrokerMessage) -> anyhow::Result<()> + Sync + Send + 'static,
 {
     let uuid = get_uuid();
 
@@ -184,7 +203,8 @@ where
             subject: subject.to_string(),
             reply_to: "".to_string(),
             body: param,
-        })?,
+        })
+        .map_err(|e| anyhow::anyhow!("{}", e))?,
     ) {
         error!("actor ra calls nats provider publish error {}", e);
     }

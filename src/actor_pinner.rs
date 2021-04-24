@@ -2,13 +2,12 @@ use crate::action;
 use crate::action::call_async_intercom;
 use prost::Message;
 use wascc_actor::prelude::codec::messaging::BrokerMessage;
-use wascc_actor::HandlerResult;
 
 const PINNER_ACTOR_NAME: &'static str = "pinner";
 
 pub fn is_node_ready<F>(reply_actor: &str, mut ready_callback: F) -> anyhow::Result<()>
 where
-    F: FnMut(bool) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(bool) -> anyhow::Result<()> + Sync + Send + 'static,
 {
     call_async_intercom(
         PINNER_ACTOR_NAME,
@@ -29,7 +28,7 @@ where
 
 pub fn get_key1<F>(reply_actor: &str, deployment_id: &str, mut callback: F) -> anyhow::Result<()>
 where
-    F: FnMut(Option<Vec<u8>>) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(Option<Vec<u8>>) -> anyhow::Result<()> + Sync + Send + 'static,
 {
     action::call_async_intercom(
         PINNER_ACTOR_NAME,
@@ -53,7 +52,7 @@ pub fn get_description_cid<F>(
     mut callback: F,
 ) -> anyhow::Result<()>
 where
-    F: FnMut(Option<String>) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(Option<String>) -> anyhow::Result<()> + Sync + Send + 'static,
 {
     action::call_async_intercom(
         PINNER_ACTOR_NAME,
@@ -80,7 +79,7 @@ pub fn get_code_or_data_cid<F>(
     mut callback: F,
 ) -> anyhow::Result<()>
 where
-    F: FnMut(Option<String>) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(Option<String>) -> anyhow::Result<()> + Sync + Send + 'static,
 {
     action::call_async_intercom(
         PINNER_ACTOR_NAME,
@@ -107,7 +106,7 @@ pub fn get_deployment_info<F>(
     mut callback: F,
 ) -> anyhow::Result<()>
 where
-    F: FnMut(Option<String>, Option<String>, Option<Vec<u8>>) -> HandlerResult<()>
+    F: FnMut(Option<String>, Option<String>, Option<Vec<u8>>) -> anyhow::Result<()>
         + Sync
         + Send
         + 'static,

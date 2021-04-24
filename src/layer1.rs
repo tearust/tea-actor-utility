@@ -1,15 +1,15 @@
-// use codec::messaging;
-// use codec::messaging::BrokerMessage;
-use prost::Message;
-use wascc_actor::prelude::*;
-
 use crate::action;
 use crate::actor_ra_proto;
 use base64;
+use prost::Message;
 
-pub fn lookup_node_profile<F>(ephemeral_id: &[u8], reply_to: &str, callback: F) -> HandlerResult<()>
+pub fn lookup_node_profile<F>(
+    ephemeral_id: &[u8],
+    reply_to: &str,
+    callback: F,
+) -> anyhow::Result<()>
 where
-    F: FnMut(&actor_ra_proto::NodeProfile) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(&actor_ra_proto::NodeProfile) -> anyhow::Result<()> + Sync + Send + 'static,
 {
     lookup_node_profile_operation(
         ephemeral_id,
@@ -23,9 +23,9 @@ pub fn lookup_node_profile_by_tea_id<F>(
     tea_id: &[u8],
     reply_to: &str,
     callback: F,
-) -> HandlerResult<()>
+) -> anyhow::Result<()>
 where
-    F: FnMut(&actor_ra_proto::NodeProfile) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(&actor_ra_proto::NodeProfile) -> anyhow::Result<()> + Sync + Send + 'static,
 {
     lookup_node_profile_operation(
         tea_id,
@@ -40,9 +40,9 @@ fn lookup_node_profile_operation<F>(
     subject: &str,
     reply_to: &str,
     mut callback: F,
-) -> HandlerResult<()>
+) -> anyhow::Result<()>
 where
-    F: FnMut(&actor_ra_proto::NodeProfile) -> HandlerResult<()> + Sync + Send + 'static,
+    F: FnMut(&actor_ra_proto::NodeProfile) -> anyhow::Result<()> + Sync + Send + 'static,
 {
     action::call(
         subject,
