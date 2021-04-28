@@ -1,9 +1,9 @@
 use crate::actor_nats::response_reply_with_subject;
-use crate::p2p_proto::GeneralMsg;
 use codec::messaging::BrokerMessage;
 use prost::Message;
 use serde::{Deserialize, Serialize};
 use tea_codec::error::TeaError;
+use vmh_codec::message::structs_proto::p2p::GeneralMsg;
 use vmh_codec::message::{encode_protobuf, structs_proto::rpc};
 use wascc_actor::prelude::*;
 

@@ -1,7 +1,7 @@
 use crate::action;
-use crate::actor_ra_proto;
 use base64;
 use prost::Message;
+use vmh_codec::message::structs_proto::ra;
 
 pub fn lookup_node_profile<F>(
     ephemeral_id: &[u8],
@@ -9,7 +9,7 @@ pub fn lookup_node_profile<F>(
     callback: F,
 ) -> anyhow::Result<()>
 where
-    F: FnMut(&actor_ra_proto::NodeProfile) -> anyhow::Result<()> + Sync + Send + 'static,
+    F: FnMut(&ra::NodeProfile) -> anyhow::Result<()> + Sync + Send + 'static,
 {
     lookup_node_profile_operation(
         ephemeral_id,
@@ -25,7 +25,7 @@ pub fn lookup_node_profile_by_tea_id<F>(
     callback: F,
 ) -> anyhow::Result<()>
 where
-    F: FnMut(&actor_ra_proto::NodeProfile) -> anyhow::Result<()> + Sync + Send + 'static,
+    F: FnMut(&ra::NodeProfile) -> anyhow::Result<()> + Sync + Send + 'static,
 {
     lookup_node_profile_operation(
         tea_id,
@@ -42,7 +42,7 @@ fn lookup_node_profile_operation<F>(
     mut callback: F,
 ) -> anyhow::Result<()>
 where
-    F: FnMut(&actor_ra_proto::NodeProfile) -> anyhow::Result<()> + Sync + Send + 'static,
+    F: FnMut(&ra::NodeProfile) -> anyhow::Result<()> + Sync + Send + 'static,
 {
     action::call(
         subject,
@@ -51,7 +51,7 @@ where
         move |msg| {
             // info!("looup_node_profile returns msg_as string:{}", &String::from_utf8(msg.body.clone())?);
             let buf = base64::decode(&String::from_utf8(msg.body.clone())?)?;
-            let profile = actor_ra_proto::NodeProfile::decode(buf.as_slice())?;
+            let profile = ra::NodeProfile::decode(buf.as_slice())?;
 
             // info!("looup_node_profile returns profile:{:?}", &profile);
             callback(&profile)

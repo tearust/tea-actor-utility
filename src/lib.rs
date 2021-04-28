@@ -67,15 +67,6 @@ pub mod kvp_proto {
 pub mod tpm_provider_proto {
     include!(concat!(env!("OUT_DIR"), "/tpm.rs"));
 }
-pub mod actor_ra_proto {
-    include!(concat!(env!("OUT_DIR"), "/actor_ra.rs"));
-}
-pub mod p2p_proto {
-    include!(concat!(env!("OUT_DIR"), "/p2p.rs"));
-}
-mod crypto_proto {
-    include!(concat!(env!("OUT_DIR"), "/crypto.rs"));
-}
 pub mod actor_pinner_proto {
     include!(concat!(env!("OUT_DIR"), "/actor_pinner.rs"));
 }
