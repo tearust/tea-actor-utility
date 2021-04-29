@@ -1,10 +1,9 @@
-use crate::actor_nats::response_reply_with_subject;
-use codec::messaging::BrokerMessage;
-use prost::Message;
 use serde::{Deserialize, Serialize};
-use tea_codec::error::TeaError;
 use vmh_codec::message::structs_proto::p2p::GeneralMsg;
-use vmh_codec::message::{encode_protobuf, structs_proto::rpc};
+use vmh_codec::message::{
+    encode_protobuf,
+    structs_proto::{p2p, rpc},
+};
 use wascc_actor::prelude::*;
 
 const PREFIX_P2P_REPLY: &str = "ipfs.p2p.reply";
@@ -17,55 +16,15 @@ pub enum P2pReplyType {
     Error(String),
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct P2pReplyMessage {
-    pub uuid: String,
-    pub peer_id: String,
-    pub op_type: P2pReplyType,
-    pub content: String,
-}
-
-pub fn listen_message<F>(from_peer_id: &str, msg: &BrokerMessage, callback: F) -> anyhow::Result<()>
-where
-    F: Fn(&GeneralMsg, &str, &str) -> HandlerResult<()> + Sync + Send + 'static,
-{
-    match GeneralMsg::decode(msg.body.as_slice()) {
-        Ok(ori_msg) => {
-            if let Err(err) = callback(&ori_msg, from_peer_id, &msg.reply_to) {
-                return response_ipfs_p2p_with_error(
-                    &msg.reply_to,
-                    from_peer_id,
-                    "",
-                    &format!("[listen_message] execute callback error: {:?}", err),
-                );
-            }
-            Ok(())
-        }
-        Err(err) => {
-            error!(
-                "GeneralMsg::decode error. body is {:?}, error is {:?}",
-                &msg.body, &err
-            );
-            response_ipfs_p2p_with_error(
-                &msg.reply_to,
-                from_peer_id,
-                "",
-                &format!("[listen_message] decode GeneralMsg error: {:?}", err),
-            )
-        }
-    }
-}
-
 pub fn send_message(peer_id: &str, uuid: &str, msg: GeneralMsg) -> anyhow::Result<()> {
     let peer_id = peer_id.to_string();
     let reply = format!("{}.{}", PREFIX_P2P_REPLY, uuid);
-    let payload = encode_protobuf(msg).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
     let _ = super::actor_rpc::call_adapter_rpc(rpc::AdapterClientRequest {
         msg: Some(rpc::adapter_client_request::Msg::IpfsP2pFrowardRequest(
             rpc::IpfsP2pFrowardRequest {
                 peer_id,
                 reply,
-                payload,
+                p2p_general_msg: Some(msg),
             },
         )),
     })?;
@@ -111,63 +70,70 @@ pub fn close_p2p(peer_id: &str) -> HandlerResult<()> {
 }
 
 pub fn response_ipfs_p2p_with_error(
-    subject: &str,
     peer_id: &str,
     uuid: &str,
     error: &str,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<Vec<u8>> {
     info!(
-        "ipfs_p2p.rs subject:{}, peer_id:{}, uuid:{}, error:{}",
-        subject, peer_id, uuid, error
+        "ipfs_p2p.rs peer_id:{}, uuid:{}, error:{}",
+        peer_id, uuid, error
     );
     error!("response_ipfs_p2p_with_error: {}", error);
-    response_ipfs_p2p_reply_with_subject(
-        "",
-        subject,
-        &P2pReplyMessage {
-            peer_id: peer_id.to_string(),
-            uuid: uuid.to_string(),
-            op_type: P2pReplyType::Error(error.to_string()),
-            content: "".to_string(),
-        },
-    )
+    let msg = p2p::P2pReplyMessage {
+        peer_id: peer_id.to_string(),
+        uuid: uuid.to_string(),
+        content: "".to_string(),
+        reply_type: p2p::P2pReplyType::Error as i32,
+        reply_error: Some(p2p::P2pReplyError {
+            message: error.to_string(),
+        }),
+    };
+    response_ipfs_p2p_reply_with_subject(msg)
 }
 
 pub fn response_ipfs_p2p(
-    subject: &str,
     peer_id: &str,
     uuid: &str,
     content: &str,
     ty: P2pReplyType,
-) -> anyhow::Result<()> {
-    response_ipfs_p2p_reply_with_subject(
-        "",
-        subject,
-        &P2pReplyMessage {
-            peer_id: peer_id.to_string(),
-            uuid: uuid.to_string(),
-            op_type: ty,
-            content: content.to_string(),
-        },
-    )
+) -> anyhow::Result<Vec<u8>> {
+    let mut msg = p2p::P2pReplyMessage {
+        peer_id: peer_id.to_string(),
+        uuid: uuid.to_string(),
+        content: content.to_string(),
+        reply_type: p2p::P2pReplyType::Success as i32,
+        reply_error: None,
+    };
+    set_reply_message_type(&mut msg, ty);
+    response_ipfs_p2p_reply_with_subject(msg)
+}
+
+fn set_reply_message_type(msg: &mut p2p::P2pReplyMessage, ty: P2pReplyType) {
+    match ty {
+        P2pReplyType::Success => msg.set_reply_type(p2p::P2pReplyType::Success),
+        P2pReplyType::Cancelled => msg.set_reply_type(p2p::P2pReplyType::Cancelled),
+        P2pReplyType::Rejected => msg.set_reply_type(p2p::P2pReplyType::Rejected),
+        P2pReplyType::Error(message) => {
+            msg.set_reply_type(p2p::P2pReplyType::Error);
+            msg.reply_error = Some(p2p::P2pReplyError { message })
+        }
+    }
 }
 
 pub fn response_ipfs_p2p_reply_with_subject(
-    reply_to: &str,
-    subject: &str,
-    msg: &P2pReplyMessage,
-) -> anyhow::Result<()> {
-    let body = serialize(msg).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
-    response_reply_with_subject(reply_to, subject, body)
+    p2p_reply_message: p2p::P2pReplyMessage,
+) -> anyhow::Result<Vec<u8>> {
+    encode_protobuf(rpc::IpfsInboundP2pForwardResponse {
+        p2p_reply_message: Some(p2p_reply_message),
+    })
 }
 
 pub fn log_and_response(
-    subject: &str,
     peer_id: &str,
     uuid: &str,
     content: &str,
     ty: P2pReplyType,
-) -> HandlerResult<()> {
+) -> anyhow::Result<Vec<u8>> {
     match &ty {
         P2pReplyType::Success => {
             // if success do not print log locally
@@ -185,15 +151,14 @@ pub fn log_and_response(
             content, peer_id, uuid, ty
         ),
     }
-    Ok(response_ipfs_p2p(subject, peer_id, uuid, content, ty)?)
+    response_ipfs_p2p(peer_id, uuid, content, ty)
 }
 
 pub fn log_and_response_with_error(
-    subject: &str,
     peer_id: &str,
     uuid: &str,
     error: &str,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<Vec<u8>> {
     error!("{}", error);
-    Ok(response_ipfs_p2p_with_error(subject, peer_id, uuid, error)?)
+    response_ipfs_p2p_with_error(peer_id, uuid, error)
 }
