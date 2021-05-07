@@ -116,3 +116,25 @@ pub fn call_layer1_rpc(req: rpc::Layer1GeneralRequest) -> anyhow::Result<Vec<u8>
         )
         .map_err(|e| anyhow::anyhow!("{}", e))
 }
+
+pub fn register_layer1_dispatcher(type_hashes: Vec<u64>) -> anyhow::Result<()> {
+    untyped::default()
+        .call(
+            tea_codec::VMH_CAPABILITY_ID,
+            vmh_codec::OP_REG_LAYER1_DISPATCHER_MESSAGE,
+            encode_protobuf(vmh::RegisterDispatcherRequest { type_hashes })?,
+        )
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    Ok(())
+}
+
+pub fn register_adapter_dispatcher(type_hashes: Vec<u64>) -> anyhow::Result<()> {
+    untyped::default()
+        .call(
+            tea_codec::VMH_CAPABILITY_ID,
+            vmh_codec::OP_REG_ADAPTER_DISPATCHER_MESSAGE,
+            encode_protobuf(vmh::RegisterDispatcherRequest { type_hashes })?,
+        )
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    Ok(())
+}
