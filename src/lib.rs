@@ -55,15 +55,7 @@
 //!
 
 pub extern crate wascc_actor;
-// use prost::Message;
 
-//use std::env;
-mod env_proto {
-    include!(concat!(env!("OUT_DIR"), "/env.rs"));
-}
-pub mod kvp_proto {
-    include!(concat!(env!("OUT_DIR"), "/kvp.rs"));
-}
 pub mod tpm_provider_proto {
     include!(concat!(env!("OUT_DIR"), "/tpm.rs"));
 }
@@ -73,6 +65,7 @@ pub mod actor_pinner_proto {
 
 pub mod action;
 pub mod actor_crypto;
+pub mod actor_enclave;
 pub mod actor_env;
 pub mod actor_ipfs;
 pub mod actor_kvp;

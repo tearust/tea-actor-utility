@@ -29,3 +29,8 @@ tea-codec = { path="../tea-codec"}
 
 [build-dependencies]
 prost-build = "0.6"
+
+[features]
+default = []
+nitro = []
+tpm = []

@@ -41,7 +41,10 @@ pub fn verify_ed25519_signature(
 pub fn sign_ed25519_message(message: &Vec<u8>, key: Option<Vec<u8>>) -> anyhow::Result<Vec<u8>> {
     // info!("enter sign_ed... in actor_util msg is {:?}", message);
     let msg = message.to_vec();
-    let req = Ed25519SignRequest { msg, key };
+    let req = Ed25519SignRequest {
+        msg,
+        key: key.unwrap_or_default(),
+    };
     let buf: Vec<u8> = encode_protobuf(req).map_err(|e| TeaError::CommonError(format!("{}", e)))?;
     let res = untyped::default()
         .call("tea:tpm", "Ed25519SignMessage", buf)
@@ -135,9 +138,10 @@ pub fn rsa_decrypt(rsa_priv_key: Vec<u8>, encrypted_msg: Vec<u8>) -> anyhow::Res
     //     "\n\n\n\n**The new original key is hex:{}\n\n\n\n",
     //     hex::encode(&dec_key.result)
     // );
-    match dec_key.error {
-        Some(e) => Err(anyhow::anyhow!("{}", e)),
-        None => Ok(dec_key.result),
+    if dec_key.error.is_empty() {
+        Ok(dec_key.result)
+    } else {
+        Err(anyhow::anyhow!("{}", dec_key.error))
     }
 }
 

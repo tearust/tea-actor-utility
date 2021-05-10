@@ -1,10 +1,9 @@
-use super::kvp_proto;
 use prost::Message;
 use serde::{Deserialize, Serialize};
 use tea_codec::error::TeaError;
 use tea_codec::{deserialize, serialize};
+use vmh_codec::message::structs_proto::kvp;
 use wascc_actor::prelude::*;
-//use keyvalue::*;
 
 const CAPABILITY: &'static str = "tea:keyvalue";
 
@@ -50,14 +49,14 @@ pub fn set_forever<'de, T: Serialize + Deserialize<'de>>(
     key: &str,
     value: &T,
 ) -> anyhow::Result<T> {
-    let req = kvp_proto::SetRequest {
+    let req = kvp::SetRequest {
         key: key.to_owned(),
         value: serialize(value)?,
         expires_s: 0,
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::SetResponse::decode(
+    let res = kvp::SetResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "Set", buf)
             .map_err(|e| TeaError::CommonError(format!("{}", e)))?
@@ -68,13 +67,13 @@ pub fn set_forever<'de, T: Serialize + Deserialize<'de>>(
 }
 
 pub fn add(binding_name: &'static str, key: &str, value: i32) -> HandlerResult<i32> {
-    let req = kvp_proto::AddRequest {
+    let req = kvp::AddRequest {
         key: key.to_owned(),
         value: value,
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::AddResponse::decode(
+    let res = kvp::AddResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "Add", buf)?
             .as_slice(),
@@ -83,12 +82,12 @@ pub fn add(binding_name: &'static str, key: &str, value: i32) -> HandlerResult<i
 }
 
 pub fn del(binding_name: &'static str, key: &str) -> HandlerResult<String> {
-    let req = kvp_proto::DelRequest {
+    let req = kvp::DelRequest {
         key: key.to_owned(),
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::DelResponse::decode(
+    let res = kvp::DelResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "Del", buf)?
             .as_slice(),
@@ -100,12 +99,12 @@ pub fn get<'de, T: Deserialize<'de>>(
     binding_name: &'static str,
     key: &str,
 ) -> anyhow::Result<Option<T>> {
-    let req = kvp_proto::GetRequest {
+    let req = kvp::GetRequest {
         key: key.to_owned(),
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::GetResponse::decode(
+    let res = kvp::GetResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "Get", buf)
             .map_err(|e| TeaError::CommonError(format!("{}", e)))?
@@ -114,7 +113,7 @@ pub fn get<'de, T: Deserialize<'de>>(
 
     if res.exists {
         match res.value {
-            Some(kvp_proto::get_response::Value::V(value)) => {
+            Some(kvp::get_response::Value::V(value)) => {
                 let result: T = deserialize(&value)?;
                 Ok(Some(result))
             }
@@ -126,12 +125,12 @@ pub fn get<'de, T: Deserialize<'de>>(
 }
 
 pub fn list_clear(binding_name: &'static str, key: &str) -> HandlerResult<String> {
-    let req = kvp_proto::DelRequest {
+    let req = kvp::DelRequest {
         key: key.to_owned(),
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::DelResponse::decode(
+    let res = kvp::DelResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "Del", buf)?
             .as_slice(),
@@ -145,14 +144,14 @@ pub fn list_range<'de, T: Serialize + Deserialize<'de>>(
     start: i32,
     stop: i32,
 ) -> HandlerResult<Vec<T>> {
-    let req = kvp_proto::ListRangeRequest {
+    let req = kvp::ListRangeRequest {
         key: key.to_owned(),
         start: start,
         stop: stop,
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::ListRangeResponse::decode(
+    let res = kvp::ListRangeResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "Range", buf)?
             .as_slice(),
@@ -170,13 +169,13 @@ pub fn list_push<'de, T: Serialize + Deserialize<'de>>(
     key: &str,
     value: &T,
 ) -> anyhow::Result<i32> {
-    let req = kvp_proto::ListPushRequest {
+    let req = kvp::ListPushRequest {
         key: key.to_owned(),
         value: serialize(value)?,
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::ListResponse::decode(
+    let res = kvp::ListResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "Push", buf)
             .map_err(|e| TeaError::CommonError(format!("{}", e)))?
@@ -191,14 +190,14 @@ pub fn set<'de, T: Serialize + Deserialize<'de>>(
     value: &T,
     expires_s: i32,
 ) -> anyhow::Result<T> {
-    let req = kvp_proto::SetRequest {
+    let req = kvp::SetRequest {
         key: key.to_owned(),
         value: serialize(value)?,
         expires_s: expires_s,
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::SetResponse::decode(
+    let res = kvp::SetResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "Set", buf)
             .map_err(|e| TeaError::CommonError(format!("{}", e)))?
@@ -213,13 +212,13 @@ pub fn list_del_item<T: Serialize>(
     key: &str,
     value: &T,
 ) -> anyhow::Result<i32> {
-    let req = kvp_proto::ListDelItemRequest {
+    let req = kvp::ListDelItemRequest {
         key: key.to_owned(),
         value: serialize(value)?,
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::ListResponse::decode(
+    let res = kvp::ListResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "ListItemDelete", buf)
             .map_err(|e| TeaError::CommonError(format!("{}", e)))?
@@ -233,13 +232,13 @@ pub fn set_add<T: Serialize>(
     key: &str,
     value: &T,
 ) -> anyhow::Result<i32> {
-    let req = kvp_proto::SetAddRequest {
+    let req = kvp::SetAddRequest {
         key: key.to_owned(),
         value: serialize(value)?,
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::SetOperationResponse::decode(
+    let res = kvp::SetOperationResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "SetAdd", buf)
             .map_err(|e| TeaError::CommonError(format!("{}", e)))?
@@ -253,13 +252,13 @@ pub fn set_remove<T: Serialize>(
     key: &str,
     value: &T,
 ) -> anyhow::Result<i32> {
-    let req = kvp_proto::SetRemoveRequest {
+    let req = kvp::SetRemoveRequest {
         key: key.to_owned(),
         value: serialize(value)?,
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::SetOperationResponse::decode(
+    let res = kvp::SetOperationResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "SetRemove", buf)
             .map_err(|e| TeaError::CommonError(format!("{}", e)))?
@@ -273,10 +272,10 @@ pub fn set_union<'de, T: Deserialize<'de>>(
     keys: Vec<&str>,
 ) -> HandlerResult<Vec<T>> {
     let keys: Vec<String> = keys.into_iter().map(|k| k.to_owned()).collect();
-    let req = kvp_proto::SetUnionRequest { keys: keys };
+    let req = kvp::SetUnionRequest { keys: keys };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::SetQueryResponse::decode(
+    let res = kvp::SetQueryResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "SetUnion", buf)?
             .as_slice(),
@@ -294,10 +293,10 @@ pub fn set_intersect<'de, T: Deserialize<'de>>(
     keys: Vec<&str>,
 ) -> HandlerResult<Vec<T>> {
     let keys: Vec<String> = keys.into_iter().map(|k| k.to_owned()).collect();
-    let req = kvp_proto::SetIntersectionRequest { keys: keys };
+    let req = kvp::SetIntersectionRequest { keys: keys };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::SetQueryResponse::decode(
+    let res = kvp::SetQueryResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "SetIntersection", buf)?
             .as_slice(),
@@ -314,12 +313,12 @@ pub fn set_query<'de, T: Deserialize<'de>>(
     binding_name: &'static str,
     key: &str,
 ) -> HandlerResult<Vec<T>> {
-    let req = kvp_proto::SetQueryRequest {
+    let req = kvp::SetQueryRequest {
         key: key.to_owned(),
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::SetQueryResponse::decode(
+    let res = kvp::SetQueryResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "SetQuery", buf)?
             .as_slice(),
@@ -333,12 +332,12 @@ pub fn set_query<'de, T: Deserialize<'de>>(
 }
 
 pub fn exists(binding_name: &'static str, key: &str) -> HandlerResult<bool> {
-    let req = kvp_proto::KeyExistsQuery {
+    let req = kvp::KeyExistsQuery {
         key: key.to_owned(),
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::GetResponse::decode(
+    let res = kvp::GetResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "KeyExists", buf)?
             .as_slice(),
@@ -352,18 +351,18 @@ pub fn keyvec_insert<T: Serialize>(
     tuple: (i32, &T),
     overwrite: bool,
 ) -> anyhow::Result<bool> {
-    let t = kvp_proto::TupleKeyValue {
+    let t = kvp::TupleKeyValue {
         k: tuple.0,
         v: serialize(tuple.1)?,
     };
-    let req = kvp_proto::KeyVecInsertQuery {
+    let req = kvp::KeyVecInsertQuery {
         key: key.to_string(),
         value: Some(t),
         overwrite: overwrite,
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::KeyVecInsertResponse::decode(
+    let res = kvp::KeyVecInsertResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "KeyVecInsert", buf)
             .map_err(|e| TeaError::CommonError(format!("{}", e)))?
@@ -376,12 +375,12 @@ pub fn keyvec_get<'de, T: Deserialize<'de>>(
     binding_name: &'static str,
     key: &str,
 ) -> HandlerResult<Vec<(i32, T)>> {
-    let req = kvp_proto::KeyVecGetQuery {
+    let req = kvp::KeyVecGetQuery {
         key: key.to_string(),
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::KeyVecGetResponse::decode(
+    let res = kvp::KeyVecGetResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "KeyVecGet", buf)?
             .as_slice(),
@@ -400,13 +399,13 @@ pub fn keyvec_remove_item(
     key: &str,
     value_idx: i32,
 ) -> HandlerResult<()> {
-    let req = kvp_proto::KeyVecRemoveItemQuery {
+    let req = kvp::KeyVecRemoveItemQuery {
         key: key.to_string(),
         value_idx: value_idx,
     };
     let mut buf = Vec::with_capacity(req.encoded_len());
     req.encode(&mut buf).expect("req encoded error");
-    let _res = kvp_proto::KeyVecRemoveItemResponse::decode(
+    let _res = kvp::KeyVecRemoveItemResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "KeyVecRemoveItem", buf)?
             .as_slice(),
@@ -420,13 +419,13 @@ pub fn keyvec_tail_off(
     key: &str,
     remain: usize,
 ) -> HandlerResult<usize> {
-    let req = kvp_proto::KeyVecTailOffQuery {
+    let req = kvp::KeyVecTailOffQuery {
         key: key.to_string(),
         remain: remain as u32,
     };
     let mut buf = Vec::with_capacity(req.encoded_len() as usize);
     req.encode(&mut buf).expect("req encoded error");
-    let res = kvp_proto::KeyVecTailOffResponse::decode(
+    let res = kvp::KeyVecTailOffResponse::decode(
         untyped::host(binding_name)
             .call(CAPABILITY, "KeyVecTailOff", buf)?
             .as_slice(),
