@@ -22,7 +22,7 @@ pub fn get_env_var(env_var: &str) -> anyhow::Result<String> {
     if res.exists {
         Ok(res.value)
     } else {
-        Ok(String::new())
+        Err(anyhow::anyhow!("failed to get environment variable: {}", env_var))
     }
 }
 

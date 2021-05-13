@@ -58,7 +58,7 @@ pub fn async_pull_cid_data(
     Ok(())
 }
 
-pub fn close_p2p(peer_id: &str) -> HandlerResult<()> {
+pub fn close_p2p(peer_id: &str) -> anyhow::Result<()> {
     let peer_id = peer_id.to_string();
     let _ = super::actor_rpc::call_adapter_rpc(rpc::AdapterClientRequest {
         msg: Some(rpc::adapter_client_request::Msg::IpfsP2pCloseRequest(
