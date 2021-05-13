@@ -7,6 +7,13 @@ use vmh_codec::message::{
 use vmh_codec::LAYER1_RPC_CHANNEL_NAME;
 use wascc_actor::prelude::*;
 
+pub fn commit_ra_result(req: rpc::CommitRaResultRequest) -> anyhow::Result<()> {
+    call_layer1_rpc(rpc::Layer1GeneralRequest {
+        msg: Some(rpc::layer1_general_request::Msg::CommitRaResultRequest(req)),
+    })?;
+    Ok(())
+}
+
 pub fn layer1_update_node_profile(req: rpc::TeaNodeUpdateProfileRequest) -> anyhow::Result<()> {
     call_layer1_rpc(rpc::Layer1GeneralRequest {
         msg: Some(rpc::layer1_general_request::Msg::UpdateNodeProfileRequest(

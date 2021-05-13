@@ -1,8 +1,6 @@
-use crate::tpm_provider_proto::*;
 use ed25519_dalek::Keypair;
 use prost::Message;
 use tea_codec::error::TeaError;
-use vmh_codec::message::encode_protobuf;
 use wascc_actor::prelude::*;
 
 pub fn rsa_key_to_bytes(key: String) -> anyhow::Result<Vec<u8>> {

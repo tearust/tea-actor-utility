@@ -4,7 +4,6 @@ use vmh_codec::message::{
     encode_protobuf,
     structs_proto::{p2p, rpc},
 };
-use wascc_actor::prelude::*;
 
 const PREFIX_P2P_REPLY: &str = "ipfs.p2p.reply";
 
