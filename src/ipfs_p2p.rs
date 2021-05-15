@@ -18,20 +18,24 @@ pub enum P2pReplyType {
 pub fn send_message(peer_id: &str, uuid: &str, msg: GeneralMsg) -> anyhow::Result<()> {
     let peer_id = peer_id.to_string();
     let reply = format!("{}.{}", PREFIX_P2P_REPLY, uuid);
-    let _ = super::actor_rpc::call_adapter_rpc(rpc::AdapterClientRequest {
-        msg: Some(rpc::adapter_client_request::Msg::IpfsP2pFrowardRequest(
-            rpc::IpfsP2pFrowardRequest {
-                peer_id,
-                reply,
-                p2p_general_msg: Some(msg),
-            },
-        )),
-    })?;
+    let _ = super::actor_rpc::call_adapter_rpc(
+        rpc::AdapterClientRequest {
+            msg: Some(rpc::adapter_client_request::Msg::IpfsP2pFrowardRequest(
+                rpc::IpfsP2pFrowardRequest {
+                    peer_id,
+                    reply,
+                    p2p_general_msg: Some(msg),
+                },
+            )),
+        },
+        uuid.to_string(),
+    )?;
 
     Ok(())
 }
 
 pub fn async_pull_cid_data(
+    uuid: &str,
     peer_id: &str,
     cid: &str,
     payload: &[u8],
@@ -42,28 +46,34 @@ pub fn async_pull_cid_data(
     let payload = payload.to_vec();
     let reply = reply_to.to_string();
     let cid = cid.to_string();
-    let _ = super::actor_rpc::call_adapter_rpc(rpc::AdapterClientRequest {
-        msg: Some(rpc::adapter_client_request::Msg::IpfsPullCidDataRequest(
-            rpc::IpfsPullCidDataRequest {
-                peer_id,
-                reply,
-                payload,
-                pin,
-                cid,
-            },
-        )),
-    })?;
+    let _ = super::actor_rpc::call_adapter_rpc(
+        rpc::AdapterClientRequest {
+            msg: Some(rpc::adapter_client_request::Msg::IpfsPullCidDataRequest(
+                rpc::IpfsPullCidDataRequest {
+                    peer_id,
+                    reply,
+                    payload,
+                    pin,
+                    cid,
+                },
+            )),
+        },
+        uuid.to_string(),
+    )?;
 
     Ok(())
 }
 
-pub fn close_p2p(peer_id: &str) -> anyhow::Result<()> {
+pub fn close_p2p(peer_id: &str, uuid: String) -> anyhow::Result<()> {
     let peer_id = peer_id.to_string();
-    let _ = super::actor_rpc::call_adapter_rpc(rpc::AdapterClientRequest {
-        msg: Some(rpc::adapter_client_request::Msg::IpfsP2pCloseRequest(
-            rpc::IpfsP2pCloseRequest { peer_id },
-        )),
-    })?;
+    let _ = super::actor_rpc::call_adapter_rpc(
+        rpc::AdapterClientRequest {
+            msg: Some(rpc::adapter_client_request::Msg::IpfsP2pCloseRequest(
+                rpc::IpfsP2pCloseRequest { peer_id },
+            )),
+        },
+        uuid,
+    )?;
 
     Ok(())
 }

@@ -1,4 +1,3 @@
-use crate::vmh::get_outbound_sequence;
 use prost::Message;
 use vmh_codec::message::{
     encode_protobuf,
@@ -7,15 +6,20 @@ use vmh_codec::message::{
 use vmh_codec::LAYER1_RPC_CHANNEL_NAME;
 use wascc_actor::prelude::*;
 
-pub fn commit_ra_result(req: rpc::CommitRaResultRequest) -> anyhow::Result<()> {
+pub fn commit_ra_result(req: rpc::CommitRaResultRequest, uuid: String) -> anyhow::Result<()> {
     call_layer1_rpc(rpc::Layer1GeneralRequest {
+        uuid,
         msg: Some(rpc::layer1_general_request::Msg::CommitRaResultRequest(req)),
     })?;
     Ok(())
 }
 
-pub fn layer1_update_node_profile(req: rpc::TeaNodeUpdateProfileRequest) -> anyhow::Result<()> {
+pub fn layer1_update_node_profile(
+    req: rpc::TeaNodeUpdateProfileRequest,
+    uuid: String,
+) -> anyhow::Result<()> {
     call_layer1_rpc(rpc::Layer1GeneralRequest {
+        uuid,
         msg: Some(rpc::layer1_general_request::Msg::UpdateNodeProfileRequest(
             req,
         )),
@@ -23,8 +27,9 @@ pub fn layer1_update_node_profile(req: rpc::TeaNodeUpdateProfileRequest) -> anyh
     Ok(())
 }
 
-pub fn layer1_add_new_node(tea_id: Vec<u8>) -> anyhow::Result<()> {
+pub fn layer1_add_new_node(tea_id: Vec<u8>, uuid: String) -> anyhow::Result<()> {
     let rpc_res_bytes = call_layer1_rpc(rpc::Layer1GeneralRequest {
+        uuid,
         msg: Some(rpc::layer1_general_request::Msg::AddNewNodeRequest(
             rpc::AddNewNodeRequest {
                 tea_id: tea_id.clone(),
@@ -51,7 +56,7 @@ pub fn call_layer1_rpc(req: rpc::Layer1GeneralRequest) -> anyhow::Result<Vec<u8>
             vmh_codec::VMH_CAPABILITY_ID,
             vmh_codec::OP_OUTBOUND_MESSAGE,
             encode_protobuf(vmh::OutboundRequest {
-                ref_seq: get_outbound_sequence()?,
+                uuid: req.uuid.clone(),
                 channel: LAYER1_RPC_CHANNEL_NAME.into(),
                 msg: Some(vmh::outbound_request::Msg::Layer1GeneralRequest(req)),
             })?,
