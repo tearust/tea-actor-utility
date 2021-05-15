@@ -77,7 +77,6 @@ pub mod async_collector;
 pub mod common;
 pub mod ipfs_p2p;
 pub mod layer1;
-pub mod vmh;
 
 #[macro_use]
 extern crate log;

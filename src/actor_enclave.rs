@@ -1,4 +1,6 @@
-use tea_codec::{OP_EPHEMERAL_PRI_KEY, OP_EPHEMERAL_PUB_KEY, OP_GET_TEA_ID};
+use prost::Message;
+use tea_codec::{OP_EPHEMERAL_PRI_KEY, OP_EPHEMERAL_PUB_KEY, OP_GET_TEA_ID, OP_NITRO_GEN_UUID};
+use vmh_codec::message::structs_proto::nitro;
 use wascc_actor::prelude::*;
 
 #[cfg(feature = "tpm")]
@@ -39,6 +41,15 @@ pub fn get_my_ephemeral_key() -> anyhow::Result<Vec<u8>> {
     } else {
         Ok(res_vec)
     }
+}
+
+#[cfg(feature = "nitro")]
+pub fn generate_uuid() -> anyhow::Result<String> {
+    let res_vec = untyped::default()
+        .call(CAPABILITY, OP_NITRO_GEN_UUID, vec![])
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    let res = nitro::GenUuidResponse::decode(res_vec.as_slice())?;
+    Ok(res.id)
 }
 
 #[cfg(feature = "tpm")]
