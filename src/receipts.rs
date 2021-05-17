@@ -127,13 +127,13 @@ pub fn get_storage_receipts(
         uuid: uuid.to_string(),
         memory: Some(receipt::Memory {
             bytes: total_memory_size,
-            duration: serialize(duration).map_err(|e| anyhow::anyhow!("{}", e))?,
+            duration: duration.to_le_bytes().to_vec(),
             unit_price: memory_params.unit_price,
             price_coefficient: memory_params.price_coefficient,
         }),
         disk: Some(receipt::Disk {
             bytes: 0, // todo calculate later from IPFS
-            duration: serialize(duration).map_err(|e| anyhow::anyhow!("{}", e))?,
+            duration: duration.to_le_bytes().to_vec(),
             unit_price: disk_params.unit_price,
             price_coefficient: disk_params.price_coefficient,
         }),
