@@ -56,6 +56,22 @@ pub fn layer1_add_new_node(tea_id: Vec<u8>, uuid: String) -> anyhow::Result<()> 
     Err(anyhow::anyhow!("unknown response: {:?}", res))
 }
 
+pub fn layer1_get_tapp_resource_cid(tapp_id: u64, uuid: String) -> anyhow::Result<Vec<u8>> {
+    let rpc_res_bytes = call_layer1_rpc(
+        rpc::Layer1GeneralRequest {
+            msg: Some(rpc::layer1_general_request::Msg::QueryTAppResourceRequest(
+                rpc::QueryTAppResourceRequest { tapp_id },
+            )),
+        },
+        uuid,
+    )?;
+    let res = rpc::Layer1GeneralResponse::decode(rpc_res_bytes.as_slice())?;
+    if let Some(rpc::layer1_general_response::Msg::QueryTAppResourceResponse(res)) = res.msg {
+        return Ok(res.cid.as_bytes().to_vec());
+    }
+    Err(anyhow::anyhow!("unknown response: {:?}", res))
+}
+
 pub fn call_layer1_rpc(req: rpc::Layer1GeneralRequest, uuid: String) -> anyhow::Result<Vec<u8>> {
     untyped::default()
         .call(
