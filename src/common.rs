@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+use std::collections::{hash_map::DefaultHasher, HashMap};
+use std::hash::{Hash, Hasher};
 
 pub struct StorePropertiesBuilder {
     properties: HashMap<String, String>,
@@ -30,4 +31,10 @@ impl StorePropertiesBuilder {
     pub fn to_map(&self) -> HashMap<String, String> {
         self.properties.clone()
     }
+}
+
+pub fn calculate_hash<T: Hash>(t: &T) -> u64 {
+    let mut s = DefaultHasher::new();
+    t.hash(&mut s);
+    s.finish()
 }
