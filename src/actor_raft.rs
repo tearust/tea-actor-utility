@@ -55,8 +55,22 @@ pub fn raft_get_values(
     Err(anyhow::anyhow!("raft get value failed: {:?}", res))
 }
 
-pub fn raft_remove_value(key: &str, storage_index: u32) -> anyhow::Result<()> {
-    // todo implement me
+pub fn raft_delete_value(key: &str, storage_index: u32, uuid: &str) -> anyhow::Result<()> {
+    let response_vec = untyped::default()
+        .call(
+            tea_codec::RAFT_CAPABILITY_ID,
+            "RaftDelete",
+            encode_protobuf(raft::DeleteValueRequest {
+                key: key.to_string(),
+                index: storage_index,
+                uuid: uuid.to_string(),
+            })?,
+        )
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    let res = raft::DeleteValueResponse::decode(response_vec.as_slice())?;
+    if !res.success {
+        return Err(anyhow::anyhow!("raft delete value failed: {:?}", res));
+    }
     Ok(())
 }
 
