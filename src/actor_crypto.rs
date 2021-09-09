@@ -208,3 +208,16 @@ pub fn sha256(content: Vec<u8>) -> anyhow::Result<Vec<u8>> {
     )?;
     Ok(res.hash)
 }
+
+pub fn public_key_from_ss58(address: &str) -> anyhow::Result<Vec<u8>> {
+    let req = crypto::FromSs58AddressRequest {
+        address: address.to_string(),
+    };
+    let res = crypto::FromSs58AddressResponse::decode(
+        untyped::default()
+            .call(CAPABILITY, "FromSS58", encode_protobuf(req)?)
+            .map_err(|e| anyhow::anyhow!("{}", e))?
+            .as_slice(),
+    )?;
+    Ok(res.result)
+}
