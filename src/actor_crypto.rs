@@ -235,3 +235,37 @@ pub fn generate_rsa_keypair(bit_size: u32) -> anyhow::Result<(String, String)> {
     )?;
     Ok((res.public_key, res.private_key))
 }
+
+pub fn rsa_encrypt(pub_key: Vec<u8>, data: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+    let res = crypto::RsaEncryptResponse::decode(
+        untyped::default()
+            .call(
+                CAPABILITY,
+                "RsaEncrypt",
+                encode_protobuf(crypto::RsaEncryptRequest {
+                    public_key_pkcs1: pub_key,
+                    msg: data,
+                })?,
+            )
+            .map_err(|e| anyhow::anyhow!("{}", e))?
+            .as_slice(),
+    )?;
+    Ok(res.result)
+}
+
+pub fn rsa_decrypt(key: Vec<u8>, encrypted_data: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+    let res = crypto::RsaDecryptResponse::decode(
+        untyped::default()
+            .call(
+                CAPABILITY,
+                "RsaEncrypt",
+                encode_protobuf(crypto::RsaDecryptRequest {
+                    private_key_pkcs1: key,
+                    msg: encrypted_data,
+                })?,
+            )
+            .map_err(|e| anyhow::anyhow!("{}", e))?
+            .as_slice(),
+    )?;
+    Ok(res.result)
+}
