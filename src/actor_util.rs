@@ -1,5 +1,7 @@
 use ed25519_dalek::Keypair;
+#[cfg(feature = "tpm")]
 use prost::Message;
+#[cfg(feature = "tpm")]
 use tea_codec::error::TeaError;
 use wascc_actor::prelude::*;
 
