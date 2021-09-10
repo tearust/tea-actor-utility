@@ -221,3 +221,17 @@ pub fn public_key_from_ss58(address: &str) -> anyhow::Result<Vec<u8>> {
     )?;
     Ok(res.result)
 }
+
+pub fn generate_rsa_keypair(bit_size: u32) -> anyhow::Result<(String, String)> {
+    let res = crypto::RsaKeyPairPemPcsk1Response::decode(
+        untyped::default()
+            .call(
+                CAPABILITY,
+                "GenerateRsaPkcs1",
+                encode_protobuf(crypto::RsaKeyPairPemPcsk1Request { bits: bit_size })?,
+            )
+            .map_err(|e| anyhow::anyhow!("{}", e))?
+            .as_slice(),
+    )?;
+    Ok((res.public_key, res.private_key))
+}

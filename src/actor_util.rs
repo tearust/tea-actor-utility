@@ -20,6 +20,7 @@ pub fn url_decode(url: &str) -> HandlerResult<String> {
     Ok(value.to_string())
 }
 
+#[cfg(feature = "tpm")]
 pub fn generate_rsa_keypair() -> anyhow::Result<crate::tpm_provider_proto::RsaKeyPairPemPcsk1> {
     //HandlerResult<actor_delegate_proto::DataRegisterResponse> {
     let res_rsa_key_pkcs1 = untyped::default()
