@@ -222,6 +222,20 @@ pub fn public_key_from_ss58(address: &str) -> anyhow::Result<Vec<u8>> {
     Ok(res.result)
 }
 
+pub fn public_key_to_ss58(public_key: &[u8]) -> anyhow::Result<String> {
+    let res = crypto::ToSs58AddressResponse::decode(
+        untyped::default()
+            .call(
+                CAPABILITY,
+                "ToSS58",
+                encode_protobuf(crypto::ToSs58AddressRequest { public_key })?,
+            )
+            .map_err(|e| anyhow::anyhow!("{}", e))?
+            .as_slice(),
+    )?;
+    Ok(res.address)
+}
+
 pub fn generate_rsa_keypair(bit_size: u32) -> anyhow::Result<(String, String)> {
     let res = crypto::RsaKeyPairPemPcsk1Response::decode(
         untyped::default()
