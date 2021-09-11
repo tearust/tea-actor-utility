@@ -228,7 +228,9 @@ pub fn public_key_to_ss58(public_key: &[u8]) -> anyhow::Result<String> {
             .call(
                 CAPABILITY,
                 "ToSS58",
-                encode_protobuf(crypto::ToSs58AddressRequest { public_key })?,
+                encode_protobuf(crypto::ToSs58AddressRequest {
+                    public_key: public_key.to_vec(),
+                })?,
             )
             .map_err(|e| anyhow::anyhow!("{}", e))?
             .as_slice(),
