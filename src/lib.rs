@@ -69,6 +69,7 @@ pub mod actor_enclave;
 pub mod actor_env;
 pub mod actor_ipfs;
 pub mod actor_kvp;
+pub mod actor_layer1;
 pub mod actor_nats;
 pub mod actor_pinner;
 pub mod actor_raft;
