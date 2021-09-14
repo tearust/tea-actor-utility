@@ -274,7 +274,7 @@ pub fn rsa_decrypt(key: Vec<u8>, encrypted_data: Vec<u8>) -> anyhow::Result<Vec<
         untyped::default()
             .call(
                 CAPABILITY,
-                "RsaEncrypt",
+                "RsaDecrypt",
                 encode_protobuf(crypto::RsaDecryptRequest {
                     private_key_pkcs1: key,
                     msg: encrypted_data,
