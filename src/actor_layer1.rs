@@ -3,6 +3,17 @@ use vmh_codec::message::encode_protobuf;
 use vmh_codec::message::structs_proto::layer1;
 use wascc_actor::prelude::*;
 
+pub fn register_layer1_event() -> anyhow::Result<()> {
+    untyped::default()
+        .call(
+            tea_codec::LAYER1_CAPABILITY_ID,
+            vmh_codec::OP_REG_LAYER1_EVENT_MESSAGE,
+            encode_protobuf(layer1::RegisterLayer1EventRequest {})?,
+        )
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    Ok(())
+}
+
 pub fn transfer_balance(
     source_seed: Vec<u8>,
     to_address: &str,
