@@ -156,45 +156,6 @@ pub fn aes_decrypt(key: Vec<u8>, encrypted_data: Vec<u8>) -> anyhow::Result<Vec<
     Ok(res.data)
 }
 
-pub fn construct_polkadot_tx(
-    to_public_key: Vec<u8>,
-    private_key: Vec<u8>,
-    amount: Vec<u8>,
-) -> anyhow::Result<Vec<u8>> {
-    let req = crypto::ConstructTxRequest {
-        msg: Some(
-            crypto::construct_tx_request::Msg::PolkadotConstructExtrinsicRequest(
-                crypto::PolkadotConstructExtrinsicRequest {
-                    to_public_key,
-                    amount,
-                    private_key,
-                },
-            ),
-        ),
-    };
-    let res = crypto::ConstructTxResponse::decode(
-        untyped::default()
-            .call(CAPABILITY, "ConstructTx", encode_protobuf(req)?)
-            .map_err(|e| anyhow::anyhow!("{}", e))?
-            .as_slice(),
-    )?;
-    Ok(res.raw_transaction)
-}
-
-pub fn send_tx(key_type: String, raw_transaction: Vec<u8>) -> anyhow::Result<Vec<u8>> {
-    let req = crypto::SendTxRequest {
-        key_type,
-        raw_transaction,
-    };
-    let res = crypto::SendTxResponse::decode(
-        untyped::default()
-            .call(CAPABILITY, "SendTx", encode_protobuf(req)?)
-            .map_err(|e| anyhow::anyhow!("{}", e))?
-            .as_slice(),
-    )?;
-    Ok(res.hash)
-}
-
 pub fn sha256(content: Vec<u8>) -> anyhow::Result<Vec<u8>> {
     let req = crypto::ShaRequest {
         sha_type: "sha256".to_string(),
