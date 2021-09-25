@@ -72,6 +72,24 @@ pub fn layer1_get_tapp_resource_cid(tapp_id: u64, uuid: String) -> anyhow::Resul
     Err(anyhow::anyhow!("unknown response: {:?}", res))
 }
 
+pub fn execute_http_request(req_url: &str, uuid: String) -> anyhow::Result<String> {
+    let rpc_res_bytes = call_layer1_rpc(
+        rpc::Layer1GeneralRequest {
+            msg: Some(rpc::layer1_general_request::Msg::HttpExecutionRequest(
+                rpc::HttpExecutionRequest {
+                    request_url: req_url.to_string(),
+                },
+            )),
+        },
+        uuid,
+    )?;
+    let res = rpc::Layer1GeneralResponse::decode(rpc_res_bytes.as_slice())?;
+    if let Some(rpc::layer1_general_response::Msg::HttpExecutionResponse(res)) = res.msg {
+        return Ok(res.response_json);
+    }
+    Err(anyhow::anyhow!("unknown response: {:?}", res))
+}
+
 pub fn call_layer1_rpc(req: rpc::Layer1GeneralRequest, uuid: String) -> anyhow::Result<Vec<u8>> {
     untyped::default()
         .call(
