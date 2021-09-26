@@ -59,7 +59,7 @@ pub fn raft_is_leader() -> anyhow::Result<bool> {
     let res = untyped::default()
         .call(tea_codec::RAFT_CAPABILITY_ID, "RaftIsLeader", vec![])
         .map_err(|e| anyhow::anyhow!("{}", e))?;
-    Ok(deserialize(res.as_slice())?)
+    Ok(deserialize(res.as_slice()).map_err(|e| anyhow::anyhow!("{}", e))?)
 }
 
 pub fn raft_delete_value(key: &str, storage_index: u32, uuid: &str) -> anyhow::Result<()> {
