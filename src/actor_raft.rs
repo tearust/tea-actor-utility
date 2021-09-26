@@ -55,6 +55,13 @@ pub fn raft_get_values(
     Err(anyhow::anyhow!("raft get value failed: {:?}", res))
 }
 
+pub fn raft_is_leader() -> anyhow::Result<bool> {
+    let res = untyped::default()
+        .call(tea_codec::RAFT_CAPABILITY_ID, "RaftIsLeader", vec![])
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    Ok(deserialize(res.as_slice())?)
+}
+
 pub fn raft_delete_value(key: &str, storage_index: u32, uuid: &str) -> anyhow::Result<()> {
     let response_vec = untyped::default()
         .call(
