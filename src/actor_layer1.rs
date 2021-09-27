@@ -14,6 +14,16 @@ pub fn register_layer1_event() -> anyhow::Result<()> {
     Ok(())
 }
 
+pub fn general_remote_request(req: layer1::Layer1Outbound) -> anyhow::Result<Vec<u8>> {
+    untyped::default()
+        .call(
+            tea_codec::LAYER1_CAPABILITY_ID,
+            "GeneralRequest",
+            encode_protobuf(req)?,
+        )
+        .map_err(|e| anyhow::anyhow!("{}", e))
+}
+
 pub fn transfer_balance(
     source_seed: Vec<u8>,
     to_address: &str,
