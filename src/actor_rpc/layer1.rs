@@ -72,7 +72,11 @@ pub fn layer1_get_tapp_resource_cid(tapp_id: u64, uuid: String) -> anyhow::Resul
     Err(anyhow::anyhow!("unknown response: {:?}", res))
 }
 
-pub fn execute_http_request(req_url: &str, uuid: String, headers: Vec<rpc::HttpExecutionHeader>,) -> anyhow::Result<String> {
+pub fn execute_http_request(
+    req_url: &str,
+    uuid: String,
+    headers: Vec<rpc::HttpExecutionHeader>,
+) -> anyhow::Result<String> {
     let rpc_res_bytes = call_layer1_rpc(
         rpc::Layer1GeneralRequest {
             msg: Some(rpc::layer1_general_request::Msg::HttpExecutionRequest(
@@ -103,15 +107,4 @@ pub fn call_layer1_rpc(req: rpc::Layer1GeneralRequest, uuid: String) -> anyhow::
             })?,
         )
         .map_err(|e| anyhow::anyhow!("{}", e))
-}
-
-pub fn register_layer1_dispatcher(type_ids: Vec<u32>) -> anyhow::Result<()> {
-    untyped::default()
-        .call(
-            tea_codec::VMH_CAPABILITY_ID,
-            vmh_codec::OP_REG_LAYER1_DISPATCHER_MESSAGE,
-            encode_protobuf(vmh::RegisterDispatcherRequest { type_ids })?,
-        )
-        .map_err(|e| anyhow::anyhow!("{}", e))?;
-    Ok(())
 }
