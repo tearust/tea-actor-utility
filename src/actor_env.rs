@@ -1,5 +1,6 @@
 use prost::Message;
 use std::time::SystemTime;
+use tea_codec::OP_CURRENT_TIMESTAMP;
 use vmh_codec::message::encode_protobuf;
 use vmh_codec::message::structs_proto::env;
 use wascc_actor::prelude::*;
@@ -42,6 +43,18 @@ pub fn get_system_time() -> anyhow::Result<SystemTime> {
     let res: SystemTime =
         deserialize(response_vec.as_slice()).map_err(|e| anyhow::anyhow!("{}", e))?;
     Ok(res)
+}
+
+pub fn current_timestamp() -> anyhow::Result<i64> {
+    let response_vec = untyped::default()
+        .call(
+            CAPABILITY,
+            OP_CURRENT_TIMESTAMP,
+            encode_protobuf(env::GetCurrentTimestampRequest {})?,
+        )
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    let res = env::GetCurrentTimestampResponse::decode(response_vec.as_slice())?;
+    Ok(res.timestamp)
 }
 
 /// calculate elapsed time in milliseconds, if calculate duration failed returns default duration
