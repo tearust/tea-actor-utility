@@ -5,18 +5,6 @@ use prost::Message;
 use tea_codec::error::TeaError;
 use wascc_actor::prelude::*;
 
-pub fn rsa_key_to_bytes(key: String) -> anyhow::Result<Vec<u8>> {
-    let der_encoded =
-        key.lines()
-            .filter(|line| !line.starts_with("-"))
-            .fold(String::new(), |mut data, line| {
-                data.push_str(&line);
-                data
-            });
-    let der_encoded = base64::decode(&der_encoded)?;
-    Ok(der_encoded)
-}
-
 pub fn url_decode(url: &str) -> HandlerResult<String> {
     let value = url::Url::parse(url)?;
     Ok(value.to_string())

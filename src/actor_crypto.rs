@@ -213,14 +213,14 @@ pub fn generate_rsa_keypair(bit_size: u32) -> anyhow::Result<(String, String)> {
     Ok((res.public_key, res.private_key))
 }
 
-pub fn rsa_encrypt(pub_key: Vec<u8>, data: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+pub fn rsa_encrypt(public_key_pkcs1: String, data: Vec<u8>) -> anyhow::Result<Vec<u8>> {
     let res = crypto::RsaEncryptResponse::decode(
         untyped::default()
             .call(
                 CAPABILITY,
                 "RsaEncrypt",
                 encode_protobuf(crypto::RsaEncryptRequest {
-                    public_key_pkcs1: pub_key,
+                    public_key_pkcs1,
                     msg: data,
                 })?,
             )
@@ -230,14 +230,14 @@ pub fn rsa_encrypt(pub_key: Vec<u8>, data: Vec<u8>) -> anyhow::Result<Vec<u8>> {
     Ok(res.result)
 }
 
-pub fn rsa_decrypt(key: Vec<u8>, encrypted_data: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+pub fn rsa_decrypt(private_key_pkcs1: String, encrypted_data: Vec<u8>) -> anyhow::Result<Vec<u8>> {
     let res = crypto::RsaDecryptResponse::decode(
         untyped::default()
             .call(
                 CAPABILITY,
                 "RsaDecrypt",
                 encode_protobuf(crypto::RsaDecryptRequest {
-                    private_key_pkcs1: key,
+                    private_key_pkcs1,
                     msg: encrypted_data,
                 })?,
             )
