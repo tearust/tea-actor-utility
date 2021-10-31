@@ -11,12 +11,27 @@ pub fn execute_http_request(
     uuid: String,
     headers: Vec<rpc::HttpExecutionHeader>,
 ) -> anyhow::Result<String> {
+    execute_http_request_ex(req_url, uuid, headers, "GET".into(), None, None)
+}
+
+pub fn execute_http_request_ex(
+    req_url: &str,
+    uuid: String,
+    headers: Vec<rpc::HttpExecutionHeader>,
+    method: String,
+    json_body: Option<Vec<u8>>,
+    timeout_milliseconds: Option<u64>,
+) -> anyhow::Result<String> {
     let rpc_res_bytes = call_layer1_rpc(
         rpc::Layer1GeneralRequest {
             msg: Some(rpc::layer1_general_request::Msg::HttpExecutionRequest(
                 rpc::HttpExecutionRequest {
                     request_url: req_url.to_string(),
                     headers,
+                    method,
+                    timeout: timeout_milliseconds
+                        .map(|milliseconds| rpc::HttpExecutionTimeout { milliseconds }),
+                    payload: json_body.map(|json_body| rpc::HttpExecutionPayload { json_body }),
                 },
             )),
         },
