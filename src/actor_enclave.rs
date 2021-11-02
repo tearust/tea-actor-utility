@@ -1,5 +1,9 @@
 use prost::Message;
-use tea_codec::{OP_EPHEMERAL_PRI_KEY, OP_EPHEMERAL_PUB_KEY, OP_GET_TEA_ID, OP_NITRO_GEN_UUID};
+use tea_codec::{
+    OP_EPHEMERAL_PRI_KEY, OP_EPHEMERAL_PUB_KEY, OP_GET_TEA_ID, OP_NITRO_GEN_RANDOM,
+    OP_NITRO_GEN_UUID,
+};
+use vmh_codec::message::encode_protobuf;
 use vmh_codec::message::structs_proto::nitro;
 use wascc_actor::prelude::*;
 
@@ -41,6 +45,19 @@ pub fn get_my_ephemeral_key() -> anyhow::Result<Vec<u8>> {
     } else {
         Ok(res_vec)
     }
+}
+
+pub fn generate_random(len: u32) -> anyhow::Result<Vec<u8>> {
+    let res_vec = untyped::default()
+        .call(
+            CAPABILITY,
+            OP_NITRO_GEN_RANDOM,
+            encode_protobuf(nitro::GenRandomRequest { len })?,
+        )
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
+
+    let res = nitro::GenRandomResponse::decode(res_vec.as_slice())?;
+    Ok(res.data)
 }
 
 #[cfg(feature = "nitro")]
