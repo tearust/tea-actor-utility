@@ -80,6 +80,7 @@ pub mod common;
 pub mod ipfs_p2p;
 pub mod layer1;
 pub mod receipts;
+pub mod actor_statemachine;
 
 #[macro_use]
 extern crate log;
