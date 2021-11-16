@@ -2,7 +2,7 @@ use prost::Message;
 use serde::{Deserialize, Serialize};
 use tea_codec::error::TeaError;
 use tea_codec::{deserialize, serialize};
-use vmh_codec::message::structs_proto::kvp;
+use vmh_codec::message::structs_proto::tokenstate::*;
 use wascc_actor::prelude::*;
 use tea_codec::TOKENSTATE_CAPABILITY_ID;
 
@@ -15,12 +15,9 @@ pub const OP_TOPUP: &str = "Topup";
 pub const OP_WITHDRAW: &str = "Withdraw";
 pub const OP_MOVE: &str = "Move";
 
-mod structs_proto {
-	include!(concat!(env!("OUT_DIR"), "/tokenstate.rs"));
-}
 const CAPABILITY: &'static str = "tea:statemachine";
 
-pub fn topup(req: TopupRequest) -> HandlerResult<i32> {
+pub fn topup(req: TopupRequest) -> HandlerResult<Vec<u8>> {
 	let mut buf = Vec::with_capacity(req.encoded_len());
 	req.encode(&mut buf).expect("req encoded error");
 	let res = StateOperateResponse::decode(
@@ -28,10 +25,10 @@ pub fn topup(req: TopupRequest) -> HandlerResult<i32> {
 			.call(TOKENSTATE_CAPABILITY_ID, OP_TOPUP, buf)?
 			.as_slice(),
 	)?;
-	Ok(res.value)
+	Ok(res.ctx)
 }
 
-pub fn withdraw(req: WithdrawRequest) -> HandlerResult<i32> {
+pub fn withdraw(req: WithdrawRequest) -> HandlerResult<Vec<u8>> {
 	let mut buf = Vec::with_capacity(req.encoded_len());
 	req.encode(&mut buf).expect("req encoded error");
 	let res = StateOperateResponse::decode(
@@ -39,9 +36,9 @@ pub fn withdraw(req: WithdrawRequest) -> HandlerResult<i32> {
 			.call(TOKENSTATE_CAPABILITY_ID, OP_WITHDRAW, buf)?
 			.as_slice(),
 	)?;
-	Ok(res.value)
+	Ok(res.ctx)
 }
-pub fn mov(req: MoveRequest) -> HandlerResult<i32> {
+pub fn mov(req: MoveRequest) -> HandlerResult<Vec<u8>> {
 	let mut buf = Vec::with_capacity(req.encoded_len());
 	req.encode(&mut buf).expect("req encoded error");
 	let res = StateOperateResponse::decode(
@@ -49,9 +46,9 @@ pub fn mov(req: MoveRequest) -> HandlerResult<i32> {
 			.call(TOKENSTATE_CAPABILITY_ID, OP_MOVE, buf)?
 			.as_slice(),
 	)?;
-	Ok(res.value)
+	Ok(res.ctx)
 }
-pub fn commit(req: CommitRequest) -> HandlerResult<i32> {
+pub fn commit(req: CommitRequest) -> HandlerResult<Vec<u8>> {
 	let mut buf = Vec::with_capacity(req.encoded_len());
 	req.encode(&mut buf).expect("req encoded error");
 	let res = StateOperateResponse::decode(
@@ -59,9 +56,9 @@ pub fn commit(req: CommitRequest) -> HandlerResult<i32> {
 			.call(TOKENSTATE_CAPABILITY_ID, OP_COMMIT_TXN, buf)?
 			.as_slice(),
 	)?;
-	Ok(res.value)
+	Ok(res.ctx)
 }
-pub fn query_token_balance(req: QueryTokenBalanceRequest) -> HandlerResult<i32> {
+pub fn query_token_balance(req: QueryTokenBalanceRequest) -> HandlerResult<(Vec<u8>, Vec<u8>)> {
 	let mut buf = Vec::with_capacity(req.encoded_len());
 	req.encode(&mut buf).expect("req encoded error");
 	let res = QueryTokenBalanceResponse::decode(
@@ -69,10 +66,10 @@ pub fn query_token_balance(req: QueryTokenBalanceRequest) -> HandlerResult<i32> 
 			.call(TOKENSTATE_CAPABILITY_ID, OP_QUERY_TOKEN_BALANCE, buf)?
 			.as_slice(),
 	)?;
-	Ok(res.value)
+	Ok((res.balance_bytes, res.state_tsid))
 }
 
-pub fn query_tea_balance(req: QueryTeaBalanceRequest) -> HandlerResult<i32> {
+pub fn query_tea_balance(req: QueryTeaBalanceRequest) -> HandlerResult<(Vec<u8>, Vec<u8>)> {
 	let mut buf = Vec::with_capacity(req.encoded_len());
 	req.encode(&mut buf).expect("req encoded error");
 	let res = QueryTeaBalanceResponse::decode(
@@ -80,9 +77,9 @@ pub fn query_tea_balance(req: QueryTeaBalanceRequest) -> HandlerResult<i32> {
 			.call(TOKENSTATE_CAPABILITY_ID, OP_QUERY_TEA_BALANCE, buf)?
 			.as_slice(),
 	)?;
-	Ok(res.value)
+	Ok((res.balance_bytes, res.state_tsid))
 }
-pub fn query_state_tsid(req: QueryStateTsidRequest) -> HandlerResult<i32> {
+pub fn query_state_tsid(req: QueryStateTsidRequest) -> HandlerResult<Vec<u8>> {
 	let mut buf = Vec::with_capacity(req.encoded_len());
 	req.encode(&mut buf).expect("req encoded error");
 	let res = QueryStateTsidResponse::decode(
@@ -90,5 +87,5 @@ pub fn query_state_tsid(req: QueryStateTsidRequest) -> HandlerResult<i32> {
 			.call(TOKENSTATE_CAPABILITY_ID, OP_QUERY_STATE_TSID, buf)?
 			.as_slice(),
 	)?;
-	Ok(res.value)
+	Ok(res.state_tsid)
 }
