@@ -5,7 +5,7 @@ use tea_codec::{deserialize, serialize};
 use vmh_codec::message::structs_proto::tokenstate::*;
 use wascc_actor::prelude::*;
 use tea_codec::TOKENSTATE_CAPABILITY_ID;
-
+pub const OP_START_TXN: &str = "StartTxn";
 pub const OP_QUERY_STATE_TSID: &str = "QueryStateTsid";
 pub const OP_QUERY_TEA_BALANCE: &str = "QueryTeaBalance";
 pub const OP_QUERY_TOKEN_BALANCE: &str = "QueryTokenBalance";
@@ -16,6 +16,15 @@ pub const OP_WITHDRAW: &str = "Withdraw";
 pub const OP_MOVE: &str = "Move";
 
 const CAPABILITY: &'static str = "tea:statemachine";
+
+pub fn start_txn() -> HandlerResult<Vec<u8>>{
+	let res = StateOperateResponse::decode(
+		untyped::default()
+			.call(TOKENSTATE_CAPABILITY_ID, OP_START_TXN, Vec::new())?
+			.as_slice(),
+	)?;
+	Ok(res.ctx)	
+}
 
 pub fn topup(req: TopupRequest) -> HandlerResult<Vec<u8>> {
 	let mut buf = Vec::with_capacity(req.encoded_len());
@@ -79,12 +88,10 @@ pub fn query_tea_balance(req: QueryTeaBalanceRequest) -> HandlerResult<(Vec<u8>,
 	)?;
 	Ok((res.balance_bytes, res.state_tsid))
 }
-pub fn query_state_tsid(req: QueryStateTsidRequest) -> HandlerResult<Vec<u8>> {
-	let mut buf = Vec::with_capacity(req.encoded_len());
-	req.encode(&mut buf).expect("req encoded error");
+pub fn query_state_tsid() -> HandlerResult<Vec<u8>> {
 	let res = QueryStateTsidResponse::decode(
 		untyped::default()
-			.call(TOKENSTATE_CAPABILITY_ID, OP_QUERY_STATE_TSID, buf)?
+			.call(TOKENSTATE_CAPABILITY_ID, OP_QUERY_STATE_TSID, Vec::new())?
 			.as_slice(),
 	)?;
 	Ok(res.state_tsid)
