@@ -8,6 +8,7 @@ fn main() {
             "actor-pinner.proto",
             "p2p.proto",
             "crypto-provider.proto",
+            "tokenstate-provider.proto",
         ],
         &["../tea-codec/proto"],
     )
