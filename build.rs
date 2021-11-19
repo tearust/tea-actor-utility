@@ -9,6 +9,7 @@ fn main() {
             "p2p.proto",
             "crypto-provider.proto",
             "tokenstate-provider.proto",
+            "replica-provider.proto",
         ],
         &["../tea-codec/proto"],
     )
