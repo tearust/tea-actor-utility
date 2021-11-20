@@ -70,17 +70,18 @@ pub mod actor_env;
 pub mod actor_ipfs;
 pub mod actor_kvp;
 pub mod actor_layer1;
+pub mod actor_libp2p;
 pub mod actor_nats;
 pub mod actor_pinner;
 pub mod actor_raft;
 pub mod actor_rpc;
+pub mod actor_statemachine;
 pub mod actor_util;
 pub mod async_collector;
 pub mod common;
 pub mod ipfs_p2p;
 pub mod layer1;
 pub mod receipts;
-pub mod actor_statemachine;
 
 #[macro_use]
 extern crate log;
