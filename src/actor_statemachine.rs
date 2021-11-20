@@ -60,11 +60,13 @@ pub fn mov(req: MoveRequest) -> HandlerResult<Vec<u8>> {
 pub fn commit(req: CommitRequest) -> HandlerResult<Vec<u8>> {
 	let mut buf = Vec::with_capacity(req.encoded_len());
 	req.encode(&mut buf).expect("req encoded error");
+	info!("line63");
 	let res = StateOperateResponse::decode(
 		untyped::default()
 			.call(TOKENSTATE_CAPABILITY_ID, OP_COMMIT_TXN, buf)?
 			.as_slice(),
 	)?;
+	info!("line69");
 	Ok(res.ctx)
 }
 pub fn query_token_balance(req: QueryTokenBalanceRequest) -> HandlerResult<(Vec<u8>, Vec<u8>)> {
