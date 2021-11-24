@@ -1,10 +1,7 @@
 use prost::Message;
-use serde::{Deserialize, Serialize};
-use tea_codec::error::TeaError;
-use tea_codec::{deserialize, serialize};
+use tea_codec::TOKENSTATE_CAPABILITY_ID;
 use vmh_codec::message::structs_proto::tokenstate::*;
 use wascc_actor::prelude::*;
-use tea_codec::TOKENSTATE_CAPABILITY_ID;
 pub const OP_START_TXN: &str = "StartTxn";
 pub const OP_QUERY_STATE_TSID: &str = "QueryStateTsid";
 pub const OP_QUERY_TEA_BALANCE: &str = "QueryTeaBalance";
@@ -15,15 +12,13 @@ pub const OP_TOPUP: &str = "Topup";
 pub const OP_WITHDRAW: &str = "Withdraw";
 pub const OP_MOVE: &str = "Move";
 
-const CAPABILITY: &'static str = "tea:statemachine";
-
-pub fn start_txn() -> HandlerResult<Vec<u8>>{
+pub fn start_txn() -> HandlerResult<Vec<u8>> {
 	let res = StateOperateResponse::decode(
 		untyped::default()
 			.call(TOKENSTATE_CAPABILITY_ID, OP_START_TXN, Vec::new())?
 			.as_slice(),
 	)?;
-	Ok(res.ctx)	
+	Ok(res.ctx)
 }
 
 pub fn topup(req: TopupRequest) -> HandlerResult<Vec<u8>> {
