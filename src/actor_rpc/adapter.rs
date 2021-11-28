@@ -100,3 +100,14 @@ pub fn register_adapter_dispatcher(type_ids: Vec<u32>) -> anyhow::Result<()> {
         .map_err(|e| anyhow::anyhow!("{}", e))?;
     Ok(())
 }
+
+pub fn register_adapter_http_dispatcher(actions: Vec<String>) -> anyhow::Result<()> {
+    untyped::default()
+        .call(
+            tea_codec::VMH_CAPABILITY_ID,
+            vmh_codec::OP_REG_ADAPTER_HTTP_DISPATCHER_MESSAGE,
+            encode_protobuf(vmh::RegisterHttpDispatcherRequest { actions })?,
+        )
+        .map_err(|e| anyhow::anyhow!("{}", e))?;
+    Ok(())
+}
